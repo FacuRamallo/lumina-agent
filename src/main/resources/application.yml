@@ -1,0 +1,80 @@
+spring:
+  application:
+    name: lumina-agent
+  # 1. Configuración de Base de Datos (JDBC)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/vector_store
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      # Configuración Global (Chat + Embedding)
+      init:
+        pull-model-strategy: never # Ya los bajamos a mano, ahorra tiempo
+
+      # Configuración específica para el CHAT (El cerebro)
+      chat:
+        options:
+          model: llama3.1
+          temperature: 0.2
+
+      # Configuración específica para EMBEDDINGS (La vectorización)
+      embedding:
+        options:
+          model: nomic-embed-text
+
+    # 2. Configuración del Vector Store
+    vector-store:
+      pgvector:
+        # Spring AI creará la tabla 'vector_store' automáticamente si no existe
+        initialize-schema: true
+        # Dimensión del vector: nomic-embed-text genera vectores de 768 dimensiones
+        dimensions: 768
+        index-type: HNSW # Algoritmo de búsqueda rápida (Hierarchical Navigable Small World)
+        distance-type: COSINE_DISTANCE
+
+  logging:
+    level:
+      root: INFO
+      # 1. Ver la interacción de ALTO NIVEL (ChatClient, Advisors)
+      org.springframework.ai.chat.client: DEBUG
+      org.springframework.ai.chat.client.advisor: DEBUG
+
+      # 2. Ver la interacción de BAJO NIVEL (JSON crudo enviado/recibido de Ollama)
+      # CRÍTICO: Aquí es donde ves el prompt con el contexto inyectado
+      org.springframework.ai.ollama.api: DEBUG
+      org.springframework.ai.ollama: DEBUG
+
+      # 3. Ver la interacción con VECTOR STORE
+      org.springframework.ai.vectorstore: DEBUG
+
+      # 4. Ver las Queries SQL reales a Postgres (Hibernate/JDBC)
+      org.hibernate.SQL: DEBUG
+      # Para ver los valores de los parámetros (?) en la query SQL
+      org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+      # 5. Ver tráfico HTTP subyacente (RestClient)
+      org.springframework.web.client.RestClient: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # El asterisco "*" entre comillas expone TODO (metrics, env, beans, mappings, etc.)
+        include: "*"
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        # Habilitamos histogramas para ver latencias P95/P99
+        spring.ai.chat.client.call: true
+        gen_ai.client.token.usage: true
+  tracing:
+    sampling:
+      probability: 1.0 # Trazar el 100% de las peticiones
+  zipkin:
+    tracing:
+      endpoint: "http://localhost:9411/api/v2/spans"

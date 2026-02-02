@@ -1,0 +1,23 @@
+services:
+  vector-db:
+    image: pgvector/pgvector:pg16
+    container_name: lumina_vector_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: vector_store
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    volumes:
+      - lumina_pg_data:/var/lib/postgresql/data
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: lumina_zipkin
+    ports:
+      - "9411:9411"
+    restart: unless-stopped
+
+volumes:
+  lumina_pg_data:

@@ -1,9 +1,7 @@
 package com.facundo.lumina;
 
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
-import org.springframework.ai.vectorstore.SearchRequest;
-import org.springframework.ai.vectorstore.VectorStore;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,22 +16,16 @@ public class LuminaAgentApplication {
     }
 
     @Bean
-    CommandLineRunner runner(ChatClient.Builder builder, VectorStore vectorStore) {
+    CommandLineRunner runner(ChatClient.Builder builder) {
         return args -> {
-            // Configuración del Agente Híbrido (Tools + RAG)
+            // Configuración del Agente (Tools)
             ChatClient agent = builder
                     // 1. Mantenemos las Tools (File System)
                     .defaultFunctions("readFile")
-                    // 2. Añadimos el Advisor de RAG
-                    .defaultAdvisors(new QuestionAnswerAdvisor(vectorStore, new SearchRequest.Builder()
-                            .topK(2) // Traer solo los 2 chunks más relevantes (ahorra contexto)
-                            .similarityThreshold(0.7)
-                            .build() // Solo traer info si es muy parricidal (evita ruido)
-                    ))
                     .build();
 
-            System.out.println("\n--- 🧠 LUMINA AGENT: LISTO (RAG + TOOLS) ---");
-            System.out.println("El agente tiene acceso a tu PDF y a tu sistema de archivos.");
+            System.out.println("\n--- 🧠 LUMINA AGENT: LISTO (TOOLS) ---");
+            System.out.println("El agente tiene acceso a tu sistema de archivos.");
             System.out.println("Escribe 'exit' para salir.\n");
 
             // Bucle interactivo simple para probar varias preguntas

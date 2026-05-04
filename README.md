@@ -1,10 +1,10 @@
 # Lumina Agent
 
-Lumina Agent is a Java-based application built with Spring Boot, designed for retrieval-augmented generation (RAG) tasks. It integrates with a vector database (PostgreSQL with pgvector) for efficient similarity searches and uses Zipkin for distributed tracing.
+Lumina Agent is a Java-based application built with Spring Boot, designed for agentic AI tasks and tool-calling capabilities. It uses Zipkin for distributed tracing.
 
 ## Features
 
-- Vector-based document ingestion and retrieval
+- AI Agent with File System Tools
 - Distributed tracing with Zipkin
 - RESTful API for interacting with the agent
 
@@ -27,7 +27,6 @@ Lumina Agent is a Java-based application built with Spring Boot, designed for re
    docker-compose up -d
    ```
    This will start:
-   - PostgreSQL with pgvector extension on port 5432
    - Zipkin on port 9411
 
 3. Build the application:

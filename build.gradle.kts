@@ -27,19 +27,12 @@ dependencies {
     // --- Spring AI Core & Ollama ---
     implementation("org.springframework.ai:spring-ai-ollama-spring-boot-starter")
 
-    // --- RAG & Vector Store ---
-    implementation("org.springframework.ai:spring-ai-pgvector-store-spring-boot-starter")
 
-    // Drivers de Base de Datos (Necesarios para que JPA/JDBC hable con Postgres)
-    implementation("org.springframework.boot:spring-boot-starter-jdbc")
-    implementation("org.postgresql:postgresql")
 
     // --- Utils & Web ---
     implementation("org.springframework.boot:spring-boot-starter-web")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
-    // Módulo para leer PDFs
-    implementation("org.springframework.ai:spring-ai-pdf-document-reader")
 
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("io.micrometer:micrometer-registry-prometheus")

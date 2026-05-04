@@ -1,13 +1,6 @@
 spring:
   application:
     name: lumina-agent
-  # 1. Configuración de Base de Datos (JDBC)
-  datasource:
-    url: jdbc:postgresql://localhost:5432/vector_store
-    username: user
-    password: password
-    driver-class-name: org.postgresql.Driver
-
   ai:
     ollama:
       base-url: http://localhost:11434
@@ -26,15 +19,7 @@ spring:
         options:
           model: nomic-embed-text
 
-    # 2. Configuración del Vector Store
-    vector-store:
-      pgvector:
-        # Spring AI creará la tabla 'vector_store' automáticamente si no existe
-        initialize-schema: true
-        # Dimensión del vector: nomic-embed-text genera vectores de 768 dimensiones
-        dimensions: 768
-        index-type: HNSW # Algoritmo de búsqueda rápida (Hierarchical Navigable Small World)
-        distance-type: COSINE_DISTANCE
+
 
   logging:
     level:
@@ -48,13 +33,7 @@ spring:
       org.springframework.ai.ollama.api: DEBUG
       org.springframework.ai.ollama: DEBUG
 
-      # 3. Ver la interacción con VECTOR STORE
-      org.springframework.ai.vectorstore: DEBUG
 
-      # 4. Ver las Queries SQL reales a Postgres (Hibernate/JDBC)
-      org.hibernate.SQL: DEBUG
-      # Para ver los valores de los parámetros (?) en la query SQL
-      org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
       # 5. Ver tráfico HTTP subyacente (RestClient)
       org.springframework.web.client.RestClient: DEBUG

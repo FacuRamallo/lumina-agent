@@ -49,7 +49,7 @@ Once running, you can interact with the API endpoints. Refer to the application 
 
 ## Configuration
 
-Configuration is managed via `src/main/resources/application.yml`.
+Configuration is managed via `src/main/resources/application.yml`. Update database connection details if necessary.
 
 ## Contributing
 

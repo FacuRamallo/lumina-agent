@@ -18,3 +18,16 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.swp
+
+# Local IDE and binaries
+.vscode/
+bin/
+
+# Security & Environments
+.env
+.env.*
+
+# Java/Spring
+out/
+.metadata/
+

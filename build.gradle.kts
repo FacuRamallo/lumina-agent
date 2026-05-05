@@ -46,8 +46,14 @@ dependencies {
     // Soluciona el error DNS de Netty
     implementation("io.netty:netty-resolver-dns-native-macos::osx-aarch_64")
 
+    // --- Persistence & Data ---
+    implementation("org.apache.commons:commons-csv:1.10.0")
+
     // --- Testing ---
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.4")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 dependencyManagement {

@@ -1,0 +1,37 @@
+# Ledger-AI (MVP) - Project Documentation
+
+## 1. Product Requirements Document (PRD)
+
+### 1.1 Objective
+Build a fully functional, automated, and intelligent personal financial system (Ledger-AI MVP) by Q2 2026. The system will ingest financial transactions from various heterogeneous sources, normalize them, intelligently categorize them using a local LLM, and provide natural language querying over the financial data.
+
+### 1.2 Target Audience
+Personal use (Single User / CEO of personal organization system).
+
+### 1.3 Key Features
+- **Data Ingestion & Normalization:** An idempotent pipeline to ingest CSVs (Bank, Pluxe) and Google Sheets.
+- **Intelligent Categorization:** Local LLM integration (Ollama + Llama3/Mistral) for automatic transaction labeling.
+- **Semantic Memory (RAG-Lite):** PGVector caching for similarity-based categorization to save compute and improve speed.
+- **Analytics & Sync:** Two-way sync with Google Sheets and budget vs. spending aggregation.
+- **Financial Insights (RAG):** Natural language interface for querying personal financial history.
+
+### 1.4 Success Metrics (KPIs)
+- **Pipeline Functionality:** 100% automated ingestion and categorization.
+- **Categorization Accuracy:** High precision categorization using local LLMs with manual override feedback loops.
+- **Performance:** Low latency categorization leveraging PGVector semantic similarity lookup.
+
+---
+
+## 2. Technical Specifications
+
+### 2.1 Technology Stack
+- **Backend:** Java 21 / Kotlin, Spring Boot 3.x
+- **AI Integration:** Spring AI, Ollama (Local LLM - `llama3:8b` or `mistral`)
+- **Database:** Postgres + PGVector (Dockerized)
+- **Architecture:** Multi-Agent Architecture (Blackboard Pattern) for the development lifecycle.
+
+### 2.2 System Architecture
+- **Ingestion Layer:** Strategy pattern for multiple parsers (`BankCsvParser`, `PluxeCsvParser`, `GoogleSheetsParser`).
+- **Processing Layer:** Spring Boot orchestrator with deduplication (SHA-256 hashing).
+- **AI/Categorization Layer:** `CategorizationService` with `BeanOutputConverter` for JSON structured output. RAG-lite vector search for semantic similarity > 0.95.
+- **Sync & Analytics Layer:** Google Sheets API integration for data visualization and manual corrections.

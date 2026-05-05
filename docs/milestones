@@ -1,0 +1,79 @@
+**Tech Stack:** Java 21/Kotlin, Spring Boot 3.x, Spring AI, Ollama (Local LLM), Postgres + PGVector.
+
+---
+
+## Milestone 0: Multi-Agent Architecture (Blackboard Pattern)
+*Goal: Set up the multi-agent environment and orchestration logic.*
+
+* **Task 0.1: Scaffold Blackboard State**
+    * Create `state.md` (Blackboard) file structure and templates following the Blackboard Pattern Architecture.
+* **Task 0.2: Create TASKS.md Ledger Template**
+    * Create the `TASKS.md` ledger template utilizing EARS notation and incorporating the Definition of Done (DoD).
+* **Task 0.3: Configure Lead Engineer Agent**
+    * Set up the Orchestrator persona by creating `lead-engineer/SKILL.md`.
+* **Task 0.4: Configure Execution Engineer Agent**
+    * Set up the execution persona by creating `execution-engineer/SKILL.md`.
+* **Task 0.5: Configure Quality Gatekeeper Agent**
+    * Set up the QA persona by creating `qa-gatekeeper/SKILL.md`.
+
+---
+
+## Milestone 1: Data Ingestion & Normalization
+*Goal: Create a clean, idempotent pipeline to centralize heterogeneous financial data.*
+
+* **Task 1.1: Source Strategy Implementation**
+    * Implement the Strategy Pattern to handle multiple parsers: `BankCsvParser`, `PluxeCsvParser`, and `GoogleSheetsParser`.
+* **Task 1.2: Unified Domain Modeling**
+    * Define a `Transaction` entity with a normalized schema: `raw_description`, `amount`, `currency`, `transaction_date`, `source_system`, and `category`.
+* **Task 1.3: Deterministic Idempotency (Hashing)**
+    * Create a utility to generate a `deduplication_id` using a SHA-256 hash of (Date + Amount + RawDescription). Prevent duplicate writes to Postgres.
+* **Task 1.4: Ingestion Orchestrator**
+    * Develop a Spring Boot `CommandLineRunner` or `@Scheduled` service to trigger the full ingestion flow and persist data to the local DB.
+
+---
+
+## Milestone 2: Intelligent Categorization (Local AI)
+*Goal: Automate transaction labeling using a local LLM while ensuring structured data output.*
+
+* **Task 2.1: Ollama & Spring AI Integration**
+    * Configure the `ChatClient` to communicate with a local Ollama instance (running `llama3:8b` or `mistral`).
+* **Task 2.2: Structured Output Service**
+    * Implement a `CategorizationService` utilizing Spring AI’s `BeanOutputConverter` to ensure the LLM returns valid JSON mapped to a predefined `Category` Enum.
+* **Task 2.3: System Prompt Engineering**
+    * Design a robust System Prompt containing the categorization taxonomy, specific vendor rules, and instructions to flag "Internal Transfers" to avoid double-counting.
+* **Task 2.4: Batch Inference Logic**
+    * Implement logic to group "Uncategorized" transactions into batches (e.g., 5-10 per prompt) to maximize throughput on the M1 Pro.
+
+---
+
+## Milestone 3: Semantic Memory (RAG-Lite)
+*Goal: Reduce LLM latency and cost by caching categorization decisions in a vector store.*
+
+* **Task 3.1: PGVector Infrastructure**
+    * Setup a local Dockerized Postgres instance with the `pgvector` extension enabled.
+* **Task 3.2: Embedding Pipeline**
+    * Integrate Spring AI’s `EmbeddingClient` to generate vectors for every new transaction description during the ingestion phase.
+* **Task 3.3: Semantic Similarity Lookup**
+    * Implement a "Search-First" flow: Before calling the LLM, query PGVector. If a match exists with similarity > 0.95, reuse that category automatically.
+
+---
+
+## Milestone 4: Analytics & Sync
+*Goal: Calculate budgets and push results back to the user interface (Google Sheets).*
+
+* **Task 4.1: Budget Aggregation Engine**
+    * Create a service to calculate monthly spending per category vs. target budgets (stored in a `budgets` table).
+* **Task 4.2: Google Sheets Outbound Sync**
+    * Implement the Google Sheets API client to update your master spreadsheet with the final AI-categorized data.
+* **Task 4.3: Manual Correction Listener**
+    * Build a sync routine that detects manual category overrides in the Google Sheet and updates the local DB and Vector Store to "teach" the system.
+
+---
+
+## Milestone 5: Financial Insights (RAG)
+*Goal: Enable natural language interrogation of financial data.*
+
+* **Task 5.1: Retrieval-Augmented Query Endpoint**
+    * Create a `/chat` endpoint that retrieves relevant transaction history from the DB based on a user’s question.
+* **Task 5.2: Analytical RAG Prompting**
+    * Develop a prompt that provides the LLM with the retrieved context and strictly instructs it to perform summaries (e.g., "How much did I spend on hobbies in February?").

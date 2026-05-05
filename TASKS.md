@@ -2,6 +2,7 @@
 
 This ledger tracks the execution of all tasks in the project using EARS (Easy Approach to Requirements Syntax) notation and clear Definitions of Done (DoD).
 
+<<<<<<< HEAD
 ## Global Definition of Done (DoD)
 *These criteria apply to every task unless otherwise specified:*
 - [ ] Code compiles and runs without errors.
@@ -17,6 +18,12 @@ This ledger tracks the execution of all tasks in the project using EARS (Easy Ap
 
 ### Task [ID] - [Task Name]
 - **Status**: [To Do | In Progress | In Review]
+=======
+## Active Tasks
+
+### Task [ID] - [Task Name]
+- **Status**: [To Do | In Progress | In Review | Done]
+>>>>>>> b2f8a0e512c27d636f5f39736180093a20af60db
 - **Assigned Agent**: [Agent Name]
 - **Milestone**: [Milestone Reference]
 
@@ -25,6 +32,7 @@ This ledger tracks the execution of all tasks in the project using EARS (Easy Ap
 * **When** [trigger] 
 * **The system shall** [system response]
 
+<<<<<<< HEAD
 #### Task-Specific DoD
 - [ ] [Custom criteria...]
 
@@ -67,3 +75,15 @@ This ledger tracks the execution of all tasks in the project using EARS (Easy Ap
 - **Assigned Agent**: Execution Engineer
 - **Milestone**: M1
 - **EARS**: **While** ingesting data from multiple file types, **When** a source system is provided (Bank/Pluxe/Sheets), **the system shall** select and execute the appropriate parsing strategy to normalize the output.
+=======
+#### Definition of Done (DoD)
+- [ ] Code compiles and runs without errors.
+- [ ] Unit tests pass (if applicable).
+- [ ] Architecture aligns with Blackboard Pattern state.
+- [ ] No regression on existing functionality.
+- [ ] QA Gatekeeper has reviewed and approved the artifact.
+
+---
+## Completed Tasks
+*Move completed tasks here.*
+>>>>>>> b2f8a0e512c27d636f5f39736180093a20af60db

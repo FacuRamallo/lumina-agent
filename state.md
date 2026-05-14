@@ -3,86 +3,57 @@
 This file serves as the central "Blackboard" for the multi-agent system. Agents read from and write to this file to share context, status, and intermediate artifacts.
 
 ## Current State
-<<<<<<< HEAD
 - **Active Milestone**: M1
-- **Active Task**: 1.1
-- **Current Phase**: Testing
+- **Active Task**: 1.3
+- **Current Phase**: Implementation
 - **Assigned Agent**: Quality Gatekeeper
-=======
-- **Active Milestone**: 
-- **Active Task**: 
-- **Current Phase**: [Planning | Execution | Testing | Review]
-- **Assigned Agent**: [Lead Engineer | Execution Engineer | Quality Gatekeeper]
->>>>>>> b2f8a0e512c27d636f5f39736180093a20af60db
 
 ## Blackboard Memory
 *Shared context, findings, and temporary data across agents.*
 
 ### Context
-<<<<<<< HEAD
 - Implementation of the Strategy Pattern for financial data ingestion as defined in `docs/specs`.
 - Target Stack: Java 21, Spring Boot.
 
 ### Architecture Decisions
 - Use an interface-based Strategy pattern to allow for easy addition of future parsers (e.g., Google Sheets).
 - Leverage Spring's `@Component` and `Map<String, SourceParser>` for automatic strategy registration.
-=======
-- *Insert relevant project context or links to specs here...*
-
-### Architecture Decisions
-- *Record any technical decisions made during the current task...*
->>>>>>> b2f8a0e512c27d636f5f39736180093a20af60db
 
 ### Handshakes & Handoffs
 *Used to pass execution control between agents.*
 
 #### Orchestrator (Lead Engineer) -> Execution Engineer
 - **Directive**: 
-<<<<<<< HEAD
-    1. Define `com.lumina.agent.ingestion.SourceParser` interface.
-    2. Implement `BankCsvParser` and `PluxeCsvParser` classes.
-    3. Implement a `ParserService` that selects the correct strategy based on a `sourceType` string.
-    4. Follow TDD: Create test CSV files in `src/test/resources` and write tests BEFORE the implementation.
+    1. Implement a hashing utility to generate a deterministic `DeduplicationId`.
+    2. Create a `DeduplicationId` value object in `com.facundo.lumina.domain` that wraps a `String` (SHA-256 hash).
+    3. The hashing logic should be in a stateless service (e.g., `HashingService` or `DeduplicationService`).
+    4. The hash MUST be calculated from: `TransactionDate` + `Amount` + `RawDescription`.
+    5. Ensure the input data is normalized before hashing to avoid inconsistencies (e.g., trim strings, consistent date format).
+    6. Adhere to **Object Calisthenics**:
+        - No classes with >2 instance variables.
+        - Wrap the hash primitive.
+    7. Follow TDD: Verify that identical transactions produce the same hash and different ones produce different hashes.
 - **Expected Artifacts**: 
-    - `SourceParser.java`
-    - `BankCsvParser.java`
-    - `PluxeCsvParser.java`
-    - `ParserService.java`
-    - Unit tests for all components.
+    - `DeduplicationId.java`
+    - `HashingService.java`
+    - `HashingServiceTest.java`
 
 #### Execution Engineer -> Quality Gatekeeper
 - **Artifacts Delivered**: 
-    - `com.facundo.lumina.ingestion.RawTransaction` (DTO)
-    - `com.facundo.lumina.ingestion.SourceParser` (Interface)
-    - `com.facundo.lumina.ingestion.BankCsvParser` (Standard Strategy)
-    - `com.facundo.lumina.ingestion.PluxeCsvParser` (Custom Strategy)
-    - `com.facundo.lumina.ingestion.ParserService` (Orchestrator)
-    - `src/test/java/com/facundo/lumina/ingestion/SourceParserTest.java` (Unit Tests)
+    - Value Object: [DeduplicationId.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/main/java/com/facundo/lumina/domain/DeduplicationId.java)
+    - Hashing Service: [HashingService.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/main/java/com/facundo/lumina/domain/service/HashingService.java)
+    - Unit Tests: [HashingServiceTest.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/test/java/com/facundo/lumina/domain/service/HashingServiceTest.java)
 - **Testing Instructions**: 
-    1. Run `./gradlew test` to verify the strategy logic.
-    2. Check `src/test/resources/data/` for sample files used in validation.
+    - Run hashing tests: `./gradlew test --tests "com.facundo.lumina.domain.service.HashingServiceTest"`
+    - Verify SHA-256 logic: Check that same data produces same hash and different data produces different ones.
 
 #### Quality Gatekeeper -> Orchestrator
 - **Approval Status**: Approved
 - **Feedback/Fixes**: 
-    - Requirement Traceability verified: Code exactly matches the Strategy Pattern directive.
-    - TDD Compliance: Tests are comprehensive and verified locally.
-    - Security: No PII or hardcoded secrets detected.
-    - Note: The fix for JUnit Platform launcher in `build.gradle.kts` was necessary and is now part of the baseline.
+    - Deterministic hashing implementation verified.
+    - `DeduplicationId` value object correctly wraps the hash.
+    - Object Calisthenics and Hexagonal boundaries maintained.
+    - TDD coverage confirmed.
 
 ## Blockers / Issues
 - None.
-=======
-- **Expected Artifacts**: 
-
-#### Execution Engineer -> Quality Gatekeeper
-- **Artifacts Delivered**: 
-- **Testing Instructions**: 
-
-#### Quality Gatekeeper -> Orchestrator
-- **Approval Status**: [Pending | Approved | Rejected]
-- **Feedback/Fixes**: 
-
-## Blockers / Issues
-- *List any active blockers here...*
->>>>>>> b2f8a0e512c27d636f5f39736180093a20af60db

@@ -15,6 +15,24 @@ This ledger tracks the execution of all tasks in the project using EARS (Easy Ap
 
 ## Active Tasks
 
+---
+
+### Task 1.3 - Deterministic Idempotency (Hashing)
+- **Status**: To Do
+- **Assigned Agent**: Execution Engineer
+- **Milestone**: M1
+
+#### EARS Requirement
+* **While** processing normalized domain transactions 
+* **When** a transaction is ready to be persisted 
+* **The system shall** generate a `deduplication_id` using a SHA-256 hash of (Date + Amount + RawDescription) to prevent duplicates.
+
+#### Task-Specific DoD
+- [ ] Implement `DeduplicationService` or utility class in `domain.service`.
+- [ ] Hash includes normalized Date, Amount, and RawDescription.
+- [ ] Unit tests verifying hash consistency and collision avoidance.
+- [ ] Adhere to Object Calisthenics (stateless, use `DeduplicationId` value object).
+
 ### Task [ID] - [Task Name]
 - **Status**: [To Do | In Progress | In Review]
 - **Assigned Agent**: [Agent Name]
@@ -67,3 +85,15 @@ This ledger tracks the execution of all tasks in the project using EARS (Easy Ap
 - **Assigned Agent**: Execution Engineer
 - **Milestone**: M1
 - **EARS**: **While** ingesting data from multiple file types, **When** a source system is provided (Bank/Pluxe/Sheets), **the system shall** select and execute the appropriate parsing strategy to normalize the output.
+
+### Task 1.2 - Unified Domain Modeling
+- **Status**: Done
+- **Assigned Agent**: Execution Engineer
+- **Milestone**: M1
+- **EARS**: **While** processing normalized data, **When** a raw transaction is ingested, **the system shall** map it to a pure Domain Entity (`Transaction`) adhering to strict Object Calisthenics and Hexagonal Architecture rules.
+
+### Task 1.2.1 - Domain Mapping Service
+- **Status**: Done
+- **Assigned Agent**: Execution Engineer
+- **Milestone**: M1
+- **EARS**: **While** processing ingested data, **When** RawTransactions are provided by the Ingestion Layer, **the system shall** map them to the Domain `Transaction` entity using a dedicated `TransactionMapper`.

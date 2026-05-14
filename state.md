@@ -4,8 +4,8 @@ This file serves as the central "Blackboard" for the multi-agent system. Agents 
 
 ## Current State
 - **Active Milestone**: M1
-- **Active Task**: 1.1
-- **Current Phase**: Testing
+- **Active Task**: 1.3
+- **Current Phase**: Implementation
 - **Assigned Agent**: Quality Gatekeeper
 
 ## Blackboard Memory
@@ -24,36 +24,36 @@ This file serves as the central "Blackboard" for the multi-agent system. Agents 
 
 #### Orchestrator (Lead Engineer) -> Execution Engineer
 - **Directive**: 
-    1. Define `com.lumina.agent.ingestion.SourceParser` interface.
-    2. Implement `BankCsvParser` and `PluxeCsvParser` classes.
-    3. Implement a `ParserService` that selects the correct strategy based on a `sourceType` string.
-    4. Follow TDD: Create test CSV files in `src/test/resources` and write tests BEFORE the implementation.
+    1. Create a `com.facundo.lumina.domain.service` package.
+    2. Implement a `TransactionMapper` to bridge the Ingestion Layer (`RawTransaction`) and the Domain Layer (`Transaction`).
+    3. The mapper should:
+        - Map `RawTransaction.date` to `TransactionDate`.
+        - Map `RawTransaction.description` to `RawDescription`.
+        - Map `RawTransaction.amount` and a default "EUR" currency to `Money`.
+        - Assign a default `Category("Uncategorized")` for now.
+        - Combine these into the nested structure: `TransactionOrigin`, `TransactionDescription`, `TransactionDetails`, and finally `Transaction`.
+    4. Adhere to **Object Calisthenics**:
+        - No more than 2 instance variables if the mapper has state (it shouldn't).
+        - No `else` keywords.
+    5. Follow TDD: Write `TransactionMapperTest` verifying all fields are correctly mapped and value objects are instantiated properly.
 - **Expected Artifacts**: 
-    - `SourceParser.java`
-    - `BankCsvParser.java`
-    - `PluxeCsvParser.java`
-    - `ParserService.java`
-    - Unit tests for all components.
+    - `TransactionMapper.java` in `com.facundo.lumina.domain.service`.
+    - `TransactionMapperTest.java` in `src/test/java/com/facundo/lumina/domain/service/`.
 
 #### Execution Engineer -> Quality Gatekeeper
 - **Artifacts Delivered**: 
-    - `com.facundo.lumina.ingestion.RawTransaction` (DTO)
-    - `com.facundo.lumina.ingestion.SourceParser` (Interface)
-    - `com.facundo.lumina.ingestion.BankCsvParser` (Standard Strategy)
-    - `com.facundo.lumina.ingestion.PluxeCsvParser` (Custom Strategy)
-    - `com.facundo.lumina.ingestion.ParserService` (Orchestrator)
-    - `src/test/java/com/facundo/lumina/ingestion/SourceParserTest.java` (Unit Tests)
+    - Mapper Service: [TransactionMapper.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/main/java/com/facundo/lumina/domain/service/TransactionMapper.java)
+    - Unit Tests: [TransactionMapperTest.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/test/java/com/facundo/lumina/domain/service/TransactionMapperTest.java)
 - **Testing Instructions**: 
-    1. Run `./gradlew test` to verify the strategy logic.
-    2. Check `src/test/resources/data/` for sample files used in validation.
+    - Run mapping tests: `./gradlew test --tests "com.facundo.lumina.domain.service.*"`
+    - Verify Object Calisthenics: Mapper is stateless and uses small helper methods.
 
 #### Quality Gatekeeper -> Orchestrator
 - **Approval Status**: Approved
 - **Feedback/Fixes**: 
-    - Requirement Traceability verified: Code exactly matches the Strategy Pattern directive.
-    - TDD Compliance: Tests are comprehensive and verified locally.
-    - Security: No PII or hardcoded secrets detected.
-    - Note: The fix for JUnit Platform launcher in `build.gradle.kts` was necessary and is now part of the baseline.
+    - Verified `TransactionMapper` follows Object Calisthenics (stateless, <2 vars, no else).
+    - TDD coverage confirmed with `TransactionMapperTest`.
+    - Pure domain layer integrity maintained.
 
 ## Blockers / Issues
 - None.

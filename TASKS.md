@@ -28,10 +28,10 @@ This ledger tracks the execution of all tasks in the project using EARS (Easy Ap
 * **The system shall** generate a `deduplication_id` using a SHA-256 hash of (Date + Amount + RawDescription) to prevent duplicates.
 
 #### Task-Specific DoD
-- [ ] Implement `DeduplicationService` or utility class in `domain.service`.
-- [ ] Hash includes normalized Date, Amount, and RawDescription.
-- [ ] Unit tests verifying hash consistency and collision avoidance.
-- [ ] Adhere to Object Calisthenics (stateless, use `DeduplicationId` value object).
+- [x] Implement `DeduplicationService` or utility class in `domain.service`.
+- [x] Hash includes normalized Date, Amount, and RawDescription.
+- [x] Unit tests verifying hash consistency and collision avoidance.
+- [x] Adhere to Object Calisthenics (stateless, use `DeduplicationId` value object).
 
 ### Task [ID] - [Task Name]
 - **Status**: [To Do | In Progress | In Review]

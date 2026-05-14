@@ -29,4 +29,9 @@ public final class TransactionDetails {
     public int hashCode() {
         return Objects.hash(description, money);
     }
+
+    @Override
+    public String toString() {
+        return description.toString() + "|" + money.toString();
+    }
 }

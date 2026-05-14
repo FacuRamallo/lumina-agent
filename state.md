@@ -24,36 +24,36 @@ This file serves as the central "Blackboard" for the multi-agent system. Agents 
 
 #### Orchestrator (Lead Engineer) -> Execution Engineer
 - **Directive**: 
-    1. Create a `com.facundo.lumina.domain.service` package.
-    2. Implement a `TransactionMapper` to bridge the Ingestion Layer (`RawTransaction`) and the Domain Layer (`Transaction`).
-    3. The mapper should:
-        - Map `RawTransaction.date` to `TransactionDate`.
-        - Map `RawTransaction.description` to `RawDescription`.
-        - Map `RawTransaction.amount` and a default "EUR" currency to `Money`.
-        - Assign a default `Category("Uncategorized")` for now.
-        - Combine these into the nested structure: `TransactionOrigin`, `TransactionDescription`, `TransactionDetails`, and finally `Transaction`.
-    4. Adhere to **Object Calisthenics**:
-        - No more than 2 instance variables if the mapper has state (it shouldn't).
-        - No `else` keywords.
-    5. Follow TDD: Write `TransactionMapperTest` verifying all fields are correctly mapped and value objects are instantiated properly.
+    1. Implement a hashing utility to generate a deterministic `DeduplicationId`.
+    2. Create a `DeduplicationId` value object in `com.facundo.lumina.domain` that wraps a `String` (SHA-256 hash).
+    3. The hashing logic should be in a stateless service (e.g., `HashingService` or `DeduplicationService`).
+    4. The hash MUST be calculated from: `TransactionDate` + `Amount` + `RawDescription`.
+    5. Ensure the input data is normalized before hashing to avoid inconsistencies (e.g., trim strings, consistent date format).
+    6. Adhere to **Object Calisthenics**:
+        - No classes with >2 instance variables.
+        - Wrap the hash primitive.
+    7. Follow TDD: Verify that identical transactions produce the same hash and different ones produce different hashes.
 - **Expected Artifacts**: 
-    - `TransactionMapper.java` in `com.facundo.lumina.domain.service`.
-    - `TransactionMapperTest.java` in `src/test/java/com/facundo/lumina/domain/service/`.
+    - `DeduplicationId.java`
+    - `HashingService.java`
+    - `HashingServiceTest.java`
 
 #### Execution Engineer -> Quality Gatekeeper
 - **Artifacts Delivered**: 
-    - Mapper Service: [TransactionMapper.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/main/java/com/facundo/lumina/domain/service/TransactionMapper.java)
-    - Unit Tests: [TransactionMapperTest.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/test/java/com/facundo/lumina/domain/service/TransactionMapperTest.java)
+    - Value Object: [DeduplicationId.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/main/java/com/facundo/lumina/domain/DeduplicationId.java)
+    - Hashing Service: [HashingService.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/main/java/com/facundo/lumina/domain/service/HashingService.java)
+    - Unit Tests: [HashingServiceTest.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/test/java/com/facundo/lumina/domain/service/HashingServiceTest.java)
 - **Testing Instructions**: 
-    - Run mapping tests: `./gradlew test --tests "com.facundo.lumina.domain.service.*"`
-    - Verify Object Calisthenics: Mapper is stateless and uses small helper methods.
+    - Run hashing tests: `./gradlew test --tests "com.facundo.lumina.domain.service.HashingServiceTest"`
+    - Verify SHA-256 logic: Check that same data produces same hash and different data produces different ones.
 
 #### Quality Gatekeeper -> Orchestrator
 - **Approval Status**: Approved
 - **Feedback/Fixes**: 
-    - Verified `TransactionMapper` follows Object Calisthenics (stateless, <2 vars, no else).
-    - TDD coverage confirmed with `TransactionMapperTest`.
-    - Pure domain layer integrity maintained.
+    - Deterministic hashing implementation verified.
+    - `DeduplicationId` value object correctly wraps the hash.
+    - Object Calisthenics and Hexagonal boundaries maintained.
+    - TDD coverage confirmed.
 
 ## Blockers / Issues
 - None.

@@ -29,4 +29,9 @@ public final class TransactionDescription {
     public int hashCode() {
         return Objects.hash(raw, category);
     }
+
+    @Override
+    public String toString() {
+        return raw.toString();
+    }
 }

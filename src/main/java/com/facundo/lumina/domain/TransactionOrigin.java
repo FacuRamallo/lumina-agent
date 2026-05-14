@@ -29,4 +29,9 @@ public final class TransactionOrigin {
     public int hashCode() {
         return Objects.hash(source, date);
     }
+
+    @Override
+    public String toString() {
+        return date.toString();
+    }
 }

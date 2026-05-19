@@ -52,7 +52,11 @@ This repository implements a multi-agent architecture based on the **Blackboard 
 
 To ensure high maintainability and robust code quality, the following paradigms are strictly enforced as part of the Definition of Done (DoD) for **every task**:
 
-1. **Hexagonal Architecture (Ports & Adapters)**: Code must enforce strict boundaries. The Domain must be isolated from external frameworks, databases, and UI. Interfaces (Ports) and Implementations (Adapters) must be explicitly separated.
+1. **Hexagonal Architecture (Ports & Adapters)**: Code must enforce strict boundaries and be structured exactly into three top-level packages:
+   - `domain`: Contains entities, value objects, domain events, and core business logic. It must be completely isolated from external frameworks (e.g., Spring annotations, databases, external libraries).
+   - `application`: Contains use cases, domain orchestrators, and application services that coordinate business flows without framework-specific implementation logic.
+   - `infrastructure`: Contains adapters, configuration classes, external service integrations, tool integrations (e.g. CLI tools), and framework-specific code.
+   Interfaces (Ports) and Implementations (Adapters) must be explicitly separated, with adapters residing in `infrastructure`.
 2. **SOLID Principles**: All code must comply with Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, and Dependency Inversion.
 3. **Clean Code Principles**: Code must be self-documenting, readable, and intent-revealing. Keep functions small, use meaningful names, and avoid unnecessary comments.
 4. **Object Calisthenics**: Strict object-oriented rules apply (e.g., Only one level of indentation per method, Don't use the ELSE keyword, Wrap all primitives and strings, First-class collections, One dot per line, Don't abbreviate, Keep entities small, No classes with >2 instance variables, No getters/setters/properties).

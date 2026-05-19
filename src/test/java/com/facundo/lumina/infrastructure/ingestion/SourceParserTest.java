@@ -1,4 +1,4 @@
-package com.facundo.lumina.ingestion;
+package com.facundo.lumina.infrastructure.ingestion;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

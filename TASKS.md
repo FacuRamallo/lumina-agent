@@ -17,21 +17,24 @@ This ledger tracks the execution of all tasks in the project using EARS (Easy Ap
 
 ---
 
-### Task 1.3 - Deterministic Idempotency (Hashing)
+### Task 2.1 - Ollama & Spring AI Integration
 - **Status**: To Do
 - **Assigned Agent**: Execution Engineer
-- **Milestone**: M1
+- **Milestone**: M2
 
 #### EARS Requirement
-* **While** processing normalized domain transactions 
-* **When** a transaction is ready to be persisted 
-* **The system shall** generate a `deduplication_id` using a SHA-256 hash of (Date + Amount + RawDescription) to prevent duplicates.
+* **While** the application is starting 
+* **When** the AI components are initialized 
+* **The system shall** configure a `ChatClient` connected to a local Ollama instance (e.g., `llama3:8b` or `mistral`).
 
 #### Task-Specific DoD
-- [x] Implement `DeduplicationService` or utility class in `domain.service`.
-- [x] Hash includes normalized Date, Amount, and RawDescription.
-- [x] Unit tests verifying hash consistency and collision avoidance.
-- [x] Adhere to Object Calisthenics (stateless, use `DeduplicationId` value object).
+- [ ] Ensure Spring AI Ollama dependencies are present in `build.gradle.kts`.
+- [ ] Configure Ollama connection properties (e.g., base-url, model) in application configuration (`application.yml` or `application.properties`).
+- [ ] Create an infrastructure configuration class (e.g., `OllamaConfig` or update `LuminaAgentApplication` if appropriate) to expose the `ChatClient`.
+- [ ] Provide an integration test or mechanism to verify basic connectivity to Ollama.
+- [ ] Adhere to Hexagonal Architecture (AI integration is an Adapter).
+
+---
 
 ### Task [ID] - [Task Name]
 - **Status**: [To Do | In Progress | In Review]
@@ -97,3 +100,15 @@ This ledger tracks the execution of all tasks in the project using EARS (Easy Ap
 - **Assigned Agent**: Execution Engineer
 - **Milestone**: M1
 - **EARS**: **While** processing ingested data, **When** RawTransactions are provided by the Ingestion Layer, **the system shall** map them to the Domain `Transaction` entity using a dedicated `TransactionMapper`.
+
+### Task 1.3 - Deterministic Idempotency (Hashing)
+- **Status**: Done
+- **Assigned Agent**: Execution Engineer
+- **Milestone**: M1
+- **EARS**: **While** processing normalized domain transactions, **When** a transaction is ready to be persisted, **the system shall** generate a `deduplication_id` using a SHA-256 hash of (Date + Amount + RawDescription) to prevent duplicates.
+
+### Task 1.4 - Ingestion Orchestrator
+- **Status**: Done
+- **Assigned Agent**: Execution Engineer
+- **Milestone**: M1
+- **EARS**: **While** the system is running, **When** the ingestion flow is triggered, **the system shall** orchestrate the full pipeline: Parse Sources -> Map to Domain -> Generate Deduplication ID.

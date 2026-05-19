@@ -2,7 +2,7 @@ package com.facundo.lumina.domain.service;
 
 import com.facundo.lumina.domain.Transaction;
 import com.facundo.lumina.domain.SourceSystem;
-import com.facundo.lumina.ingestion.RawTransaction;
+import com.facundo.lumina.infrastructure.ingestion.RawTransaction;
 import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDate;

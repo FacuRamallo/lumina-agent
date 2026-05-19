@@ -4,9 +4,9 @@ This file serves as the central "Blackboard" for the multi-agent system. Agents 
 
 ## Current State
 - **Active Milestone**: M1
-- **Active Task**: 1.3
+- **Active Task**: 1.4
 - **Current Phase**: Implementation
-- **Assigned Agent**: Quality Gatekeeper
+- **Assigned Agent**: Execution Engineer
 
 ## Blackboard Memory
 *Shared context, findings, and temporary data across agents.*
@@ -24,36 +24,34 @@ This file serves as the central "Blackboard" for the multi-agent system. Agents 
 
 #### Orchestrator (Lead Engineer) -> Execution Engineer
 - **Directive**: 
-    1. Implement a hashing utility to generate a deterministic `DeduplicationId`.
-    2. Create a `DeduplicationId` value object in `com.facundo.lumina.domain` that wraps a `String` (SHA-256 hash).
-    3. The hashing logic should be in a stateless service (e.g., `HashingService` or `DeduplicationService`).
-    4. The hash MUST be calculated from: `TransactionDate` + `Amount` + `RawDescription`.
-    5. Ensure the input data is normalized before hashing to avoid inconsistencies (e.g., trim strings, consistent date format).
-    6. Adhere to **Object Calisthenics**:
-        - No classes with >2 instance variables.
-        - Wrap the hash primitive.
-    7. Follow TDD: Verify that identical transactions produce the same hash and different ones produce different hashes.
+    **CORRECTION DIRECTIVE** - The Quality Gatekeeper rejected the previous implementation due to Object Calisthenics violations. Please fix the following:
+    1. Fix `IngestionOrchestrator`: It currently has 3 instance variables (`parserService`, `transactionMapper`, `hashingService`). Group the domain services (`TransactionMapper` and `HashingService`) into a new wrapper class or record (e.g., `DomainServices` or `DomainProcessor`) to reduce the instance variables in `IngestionOrchestrator` to maximum 2.
+    2. Fix `IngestionRunner`: Refactor the `processFile` method to strictly adhere to the "One dot per line" rule. Extract the string manipulation (e.g., extracting the source type from the file name) into a dedicated, well-named method or wrap the primitive string logic to avoid chained method calls and inline ternary operators.
+    3. Ensure all tests still pass after refactoring.
 - **Expected Artifacts**: 
-    - `DeduplicationId.java`
-    - `HashingService.java`
-    - `HashingServiceTest.java`
+    - Updated `IngestionOrchestrator.java`
+    - Updated `IngestionRunner.java`
+    - New `DomainProcessor.java` (or similar grouping class)
+    - Updated `IngestionOrchestratorTest.java` (if necessary)
 
 #### Execution Engineer -> Quality Gatekeeper
 - **Artifacts Delivered**: 
-    - Value Object: [DeduplicationId.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/main/java/com/facundo/lumina/domain/DeduplicationId.java)
-    - Hashing Service: [HashingService.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/main/java/com/facundo/lumina/domain/service/HashingService.java)
-    - Unit Tests: [HashingServiceTest.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/test/java/com/facundo/lumina/domain/service/HashingServiceTest.java)
+    - Configuration: [DomainConfig.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/main/java/com/facundo/lumina/application/config/DomainConfig.java)
+    - Orchestrator: [IngestionOrchestrator.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/main/java/com/facundo/lumina/application/IngestionOrchestrator.java)
+    - Runner: [IngestionRunner.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/main/java/com/facundo/lumina/application/IngestionRunner.java)
+    - Domain Wrapper: [DomainProcessor.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/main/java/com/facundo/lumina/application/DomainProcessor.java)
+    - Value Record: [ProcessedTransaction.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/main/java/com/facundo/lumina/application/ProcessedTransaction.java)
+    - Unit Tests: [IngestionOrchestratorTest.java](file:///Users/facundo.ramallo/Documents/programing/repos/lumina-agent/src/test/java/com/facundo/lumina/application/IngestionOrchestratorTest.java)
 - **Testing Instructions**: 
-    - Run hashing tests: `./gradlew test --tests "com.facundo.lumina.domain.service.HashingServiceTest"`
-    - Verify SHA-256 logic: Check that same data produces same hash and different data produces different ones.
+    - Run orchestrator tests: `./gradlew test --tests "com.facundo.lumina.application.IngestionOrchestratorTest"`
+    - Proof of Work: Tests pass locally.
+    - Verified architectural guidelines: Refactored `IngestionOrchestrator` to have 2 instance variables. Refactored `IngestionRunner` to respect one dot per line.
 
 #### Quality Gatekeeper -> Orchestrator
-- **Approval Status**: Approved
+- **Approval Status**: [Approved]
 - **Feedback/Fixes**: 
-    - Deterministic hashing implementation verified.
-    - `DeduplicationId` value object correctly wraps the hash.
-    - Object Calisthenics and Hexagonal boundaries maintained.
-    - TDD coverage confirmed.
+    - [Approved] Object Calisthenics violations have been addressed successfully. The orchestrator now uses `DomainProcessor` and `IngestionRunner` logic is decoupled to enforce the one-dot-per-line rule.
+    - Please proceed to close Task 1.4 in `TASKS.md` and initiate the next task.
 
 ## Blockers / Issues
 - None.

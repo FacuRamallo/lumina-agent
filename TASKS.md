@@ -17,23 +17,6 @@ This ledger tracks the execution of all tasks in the project using EARS (Easy Ap
 
 ---
 
-<<<<<<< HEAD
-### Task 1.3 - Deterministic Idempotency (Hashing)
-- **Status**: To Do
-- **Assigned Agent**: Execution Engineer
-- **Milestone**: M1
-
-#### EARS Requirement
-* **While** processing normalized domain transactions 
-* **When** a transaction is ready to be persisted 
-* **The system shall** generate a `deduplication_id` using a SHA-256 hash of (Date + Amount + RawDescription) to prevent duplicates.
-
-#### Task-Specific DoD
-- [ ] Implement `DeduplicationService` or utility class in `domain.service`.
-- [ ] Hash includes normalized Date, Amount, and RawDescription.
-- [ ] Unit tests verifying hash consistency and collision avoidance.
-- [ ] Adhere to Object Calisthenics (stateless, use `DeduplicationId` value object).
-=======
 ### Task 2.1 - Ollama & Spring AI Integration
 - **Status**: To Do
 - **Assigned Agent**: Execution Engineer
@@ -52,7 +35,6 @@ This ledger tracks the execution of all tasks in the project using EARS (Easy Ap
 - [ ] Adhere to Hexagonal Architecture (AI integration is an Adapter).
 
 ---
->>>>>>> c1ffb6b57aabb6af84e9cb2bdb0d274ff4d596c4
 
 ### Task [ID] - [Task Name]
 - **Status**: [To Do | In Progress | In Review]

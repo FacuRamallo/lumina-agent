@@ -17,25 +17,6 @@ This ledger tracks the execution of all tasks in the project using EARS (Easy Ap
 
 ---
 
-### Task 2.1 - Ollama & Spring AI Integration
-- **Status**: To Do
-- **Assigned Agent**: Execution Engineer
-- **Milestone**: M2
-
-#### EARS Requirement
-* **While** the application is starting 
-* **When** the AI components are initialized 
-* **The system shall** configure a `ChatClient` connected to a local Ollama instance (e.g., `llama3:8b` or `mistral`).
-
-#### Task-Specific DoD
-- [ ] Ensure Spring AI Ollama dependencies are present in `build.gradle.kts`.
-- [ ] Configure Ollama connection properties (e.g., base-url, model) in application configuration (`application.yml` or `application.properties`).
-- [ ] Create an infrastructure configuration class (e.g., `OllamaConfig` or update `LuminaAgentApplication` if appropriate) to expose the `ChatClient`.
-- [ ] Provide an integration test or mechanism to verify basic connectivity to Ollama.
-- [ ] Adhere to Hexagonal Architecture (AI integration is an Adapter).
-
----
-
 ### Task [ID] - [Task Name]
 - **Status**: [To Do | In Progress | In Review]
 - **Assigned Agent**: [Agent Name]
@@ -52,6 +33,13 @@ This ledger tracks the execution of all tasks in the project using EARS (Easy Ap
 ---
 
 ## Completed Tasks
+
+### Task 2.1 - Ollama & Spring AI Integration
+- **Status**: Done
+- **Assigned Agent**: Execution Engineer
+- **Milestone**: M2
+- **EARS**: **While** the application is starting, **When** the AI components are initialized, **the system shall** configure a `ChatClient` connected to a local Ollama instance (e.g., `llama3:8b` or `mistral`).
+
 
 ### Task 0.1 - Scaffold Blackboard State
 - **Status**: Done

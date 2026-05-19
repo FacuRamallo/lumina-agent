@@ -1,4 +1,3 @@
-// Archivo: build.gradle.kts
 plugins {
     java
     id("org.springframework.boot") version "3.4.1"

@@ -1,4 +1,4 @@
-package com.facundo.lumina.ingestion;
+package com.facundo.lumina.infrastructure.ingestion;
 
 import lombok.Builder;
 import lombok.Data;

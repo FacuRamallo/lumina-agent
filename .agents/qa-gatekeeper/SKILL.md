@@ -14,7 +14,7 @@ You must prove that the code matches the intent:
 - **Direct Mapping**: For every file modified by the Execution Engineer, identify which part of the Lead Engineer's directive it satisfies.
 - **Orphan Code Check**: Flag any code changes that are NOT requested by the directive (Scope Creep).
 - **Test Verification**: Verify that the "Test Code" provided actually exercises the "Production Code" according to the EARS requirement.
-- **Architecture & Code Quality Guardrails**: Explicitly check the code for adherence to Hexagonal Architecture boundaries, SOLID Principles, Clean Code semantics, and Object Calisthenics rules. Reject if any of these are violated.
+- **Architecture & Code Quality Guardrails**: Explicitly check the code for adherence to Hexagonal Architecture boundaries. Verify files reside strictly under `domain`, `application`, or `infrastructure`, and reject if framework/library dependencies (like Spring's `@Service`, `@Component`, `@Configuration`, `@Bean`) leak into the `domain` layer. Also verify compliance with SOLID Principles, Clean Code semantics, and Object Calisthenics rules. Reject if any of these are violated.
 
 ## Output Protocol (Pass/Fail)
 Your verdict must be binary and unmistakable:

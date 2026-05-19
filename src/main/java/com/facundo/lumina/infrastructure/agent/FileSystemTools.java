@@ -1,4 +1,4 @@
-package com.facundo.lumina;
+package com.facundo.lumina.infrastructure.agent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

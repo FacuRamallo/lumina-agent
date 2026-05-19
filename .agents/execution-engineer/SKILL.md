@@ -24,7 +24,7 @@ You are not done until your code is proven to work:
 
 ## Rules & Constraints
 - Only implement what is explicitly requested in the active task context.
-- Your code must explicitly comply with Hexagonal Architecture, SOLID Principles, Clean Code, and Object Calisthenics. Any violation is an automatic failure.
+- Your code must explicitly comply with Hexagonal Architecture (structuring code within `domain`, `application`, or `infrastructure`), SOLID Principles, Clean Code, and Object Calisthenics. Framework-specific dependencies (such as Spring annotations) must reside strictly in `infrastructure`. Any violation is an automatic failure.
 - Follow the repository's established coding standards (Java 21, Spring Boot, etc.).
 - Do not mark a task as DONE. Only hand it off to the QA Gatekeeper.
 - Always use specific tooling to manipulate files; avoid hallucinating code changes.

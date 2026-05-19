@@ -1,7 +1,15 @@
 package com.facundo.lumina.domain.service;
 
-import com.facundo.lumina.domain.*;
-import com.facundo.lumina.ingestion.RawTransaction;
+import com.facundo.lumina.domain.Category;
+import com.facundo.lumina.domain.Money;
+import com.facundo.lumina.domain.RawDescription;
+import com.facundo.lumina.domain.SourceSystem;
+import com.facundo.lumina.domain.Transaction;
+import com.facundo.lumina.domain.TransactionDate;
+import com.facundo.lumina.domain.TransactionDetails;
+import com.facundo.lumina.domain.TransactionDescription;
+import com.facundo.lumina.domain.TransactionOrigin;
+import com.facundo.lumina.infrastructure.ingestion.RawTransaction;
 import java.util.Currency;
 
 public final class TransactionMapper {

@@ -1,7 +1,6 @@
-package com.facundo.lumina;
+package com.facundo.lumina.infrastructure;
 
-import org.springframework.ai.chat.client.ChatClient;
-
+import com.facundo.lumina.application.LanguageModelPort;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,14 +15,8 @@ public class LuminaAgentApplication {
     }
 
     @Bean
-    CommandLineRunner runner(ChatClient.Builder builder) {
+    CommandLineRunner runner(LanguageModelPort languageModelPort) {
         return args -> {
-            // Configuración del Agente (Tools)
-            ChatClient agent = builder
-                    // 1. Mantenemos las Tools (File System)
-                    .defaultFunctions("readFile")
-                    .build();
-
             System.out.println("\n--- 🧠 LUMINA AGENT: LISTO (TOOLS) ---");
             System.out.println("El agente tiene acceso a tu sistema de archivos.");
             System.out.println("Escribe 'exit' para salir.\n");
@@ -34,12 +27,11 @@ public class LuminaAgentApplication {
                     System.out.print("TÚ > ");
                     String input = scanner.nextLine();
 
-                    if ("exit".equalsIgnoreCase(input)) break;
+                    if ("exit".equalsIgnoreCase(input)) {
+                        break;
+                    }
 
-                    String response = agent.prompt()
-                            .user(input)
-                            .call()
-                            .content();
+                    String response = languageModelPort.ask(input);
 
                     System.out.println("LUMINA > " + response + "\n");
                 }

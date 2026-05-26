@@ -15,7 +15,6 @@ import java.util.Currency;
 public final class TransactionMapper {
 
     private static final String DEFAULT_CURRENCY = "EUR";
-    private static final String DEFAULT_CATEGORY = "Uncategorized";
 
     public Transaction map(RawTransaction raw, SourceSystem source) {
         return new Transaction(
@@ -41,7 +40,7 @@ public final class TransactionMapper {
     private TransactionDescription createDescription(RawTransaction raw) {
         return new TransactionDescription(
             new RawDescription(raw.getDescription()),
-            new Category(DEFAULT_CATEGORY)
+            Category.UNKNOWN
         );
     }
 

@@ -16,7 +16,7 @@ class TransactionTest {
         TransactionOrigin origin = new TransactionOrigin(source, date);
 
         RawDescription raw = new RawDescription("Supermarket purchase");
-        Category category = new Category("Groceries");
+        Category category = Category.GROCERIES;
         TransactionDescription description = new TransactionDescription(raw, category);
 
         Money money = new Money(new BigDecimal("50.00"), Currency.getInstance("EUR"));
@@ -36,19 +36,19 @@ class TransactionTest {
         BigDecimal amount = new BigDecimal("10.00");
         Currency eur = Currency.getInstance("EUR");
 
-        Transaction t1 = createTransaction("Source", now, "Desc", "Cat", amount, eur);
-        Transaction t2 = createTransaction("Source", now, "Desc", "Cat", amount, eur);
+        Transaction t1 = createTransaction("Source", now, "Desc", Category.UNKNOWN, amount, eur);
+        Transaction t2 = createTransaction("Source", now, "Desc", Category.UNKNOWN, amount, eur);
 
         // Assert
         assertEquals(t1, t2);
         assertEquals(t1.hashCode(), t2.hashCode());
     }
 
-    private Transaction createTransaction(String src, LocalDate date, String desc, String cat, BigDecimal amount, Currency curr) {
+    private Transaction createTransaction(String src, LocalDate date, String desc, Category cat, BigDecimal amount, Currency curr) {
         return new Transaction(
             new TransactionOrigin(new SourceSystem(src), new TransactionDate(date)),
             new TransactionDetails(
-                new TransactionDescription(new RawDescription(desc), new Category(cat)),
+                new TransactionDescription(new RawDescription(desc), cat),
                 new Money(amount, curr)
             )
         );

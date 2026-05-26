@@ -48,7 +48,7 @@ class HashingServiceTest {
         return new Transaction(
             new TransactionOrigin(new SourceSystem("Bank"), new TransactionDate(LocalDate.parse(date))),
             new TransactionDetails(
-                new TransactionDescription(new RawDescription(desc), new Category("Uncategorized")),
+                new TransactionDescription(new RawDescription(desc), Category.UNKNOWN),
                 new Money(new BigDecimal(amount), Currency.getInstance("EUR"))
             )
         );

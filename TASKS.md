@@ -17,22 +17,19 @@ This ledger tracks the execution of all tasks in the project using EARS (Easy Ap
 
 ---
 
-### Task [ID] - [Task Name]
-- **Status**: [To Do | In Progress | In Review]
-- **Assigned Agent**: [Agent Name]
-- **Milestone**: [Milestone Reference]
+## Completed Tasks
 
-#### EARS Requirement
-* **While** [precondition] 
-* **When** [trigger] 
-* **The system shall** [system response]
-
-#### Task-Specific DoD
-- [ ] [Custom criteria...]
+### Task 2.2 - Structured Output Service
+- **Status**: Done ✅
+- **Assigned Agent**: Execution Engineer
+- **Milestone**: M2
+- **EARS**: **While** categorizing transactions, **When** the LLM is queried, **the system shall** use a structured output format (`BeanOutputConverter`) to ensure the response maps strictly to a predefined `Category` enum.
+- **Task-Specific DoD**:
+  - [x] Define `Category` enum in Domain layer.
+  - [x] Define `CategorizationPort` in Application layer.
+  - [x] Implement `SpringAiCategorizationAdapter` in Infrastructure layer using Spring AI's structured output.
 
 ---
-
-## Completed Tasks
 
 ### Task 2.1 - Ollama & Spring AI Integration
 - **Status**: Done

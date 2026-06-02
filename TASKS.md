@@ -15,6 +15,22 @@ This ledger tracks the execution of all tasks in the project using EARS (Easy Ap
 
 ## Active Tasks
 
+### Task 2.4 - Batch Inference Logic
+- **Status**: In Progress 🔄
+- **Assigned Agent**: Execution Engineer
+- **Milestone**: M2
+- **EARS**: **While** the ingestion pipeline runs, **When** transactions have been parsed, **the system shall** group their raw descriptions into batches of 5 and call the LLM once per batch via a `BatchCategorizationPort`, returning fully categorized `ProcessedTransaction` objects.
+- **Task-Specific DoD**:
+  - [ ] `BatchCategorizationPort` defined in `application` — `List<Category> categorize(List<String> descriptions)`.
+  - [ ] `SpringAiBatchCategorizationAdapter` in `infrastructure` implements the port with `chatClient` + `promptProvider` (exactly 2 instance vars); `BeanOutputConverter<List<CategoryResponse>>` is constructed locally.
+  - [ ] `CategorizationOrchestrator` in `application` has `domainProcessor` + `batchCategorizationPort` (exactly 2 instance vars); `BATCH_SIZE = 5` is a `static final` constant; it maps raws → domain, batches descriptions, calls LLM per batch, returns categorized list.
+  - [ ] `TransactionMapper.map()` and `DomainProcessor.process()` accept a `Category` parameter (no more hardcoded `Category.UNKNOWN`).
+  - [ ] `IngestionOrchestrator` swaps `domainProcessor` dep for `categorizationOrchestrator`; iterates result list and logs each.
+  - [ ] All impacted existing tests updated (`TransactionMapperTest`, `IngestionOrchestratorTest`).
+  - [ ] New unit tests: `SpringAiBatchCategorizationAdapterTest` and `CategorizationOrchestratorTest`.
+  - [ ] `./gradlew test` → `BUILD SUCCESSFUL`.
+  - [ ] Hexagonal Architecture, SOLID, Object Calisthenics, Clean Code — all enforced.
+
 ### Task 2.3 - System Prompt Engineering
 - **Status**: In Progress 🔄
 - **Assigned Agent**: Execution Engineer

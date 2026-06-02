@@ -4,7 +4,7 @@ This file serves as the central "Blackboard" for the multi-agent system. Agents 
 
 ## Current State
 - **Active Milestone**: M2
-- **Active Task**: 2.3
+- **Active Task**: 2.4
 - **Current Phase**: QA Review
 - **Assigned Agent**: Quality Gatekeeper
 
@@ -12,85 +12,148 @@ This file serves as the central "Blackboard" for the multi-agent system. Agents 
 *Shared context, findings, and temporary data across agents.*
 
 ### Context
-- Task 2.2 (Structured Output Service) is complete and merged. The system has `Category` enum, `CategorizationPort`, and `SpringAiCategorizationAdapter` using `BeanOutputConverter`.
-- The current `SYSTEM_PROMPT` is an inline `static final` constant in `SpringAiCategorizationAdapter`. It is minimal — only 6 lines with no vendor-specific rules, no taxonomy descriptions, and no categorization guidance beyond the enum names.
-- Task 2.3 externalizes and enriches this prompt into its own dedicated class, keeping `SpringAiCategorizationAdapter` clean and testable.
+- Task 2.3 (System Prompt Engineering) is complete and merged. The system has `CategorizationPromptProvider` with a rich multi-section prompt, and `SpringAiCategorizationAdapter` for single-item categorization.
+- The current pipeline: `IngestionOrchestrator` → `DomainProcessor` (maps + hashes each raw one-by-one) → logs. Categorization is NOT yet wired into the pipeline.
+- `TransactionMapper.map()` hardcodes `Category.UNKNOWN`. This must be parameterized so the orchestrator can drive the category assignment.
+- Task 2.4 wires batch LLM categorization into the ingestion pipeline via a new `CategorizationOrchestrator`.
 
 ### Architecture Decisions
-- Create `CategorizationPromptProvider` (a `@Component`) in `com.facundo.lumina.infrastructure.agent`.
-  - Single responsibility: own the full prompt string.
-  - Exposes one method: `String prompt()`.
-- Refactor `SpringAiCategorizationAdapter` to inject `CategorizationPromptProvider` via constructor.
-  - Remove the `static final SYSTEM_PROMPT` constant from the adapter.
-  - **Constraint**: the adapter must still have exactly 2 instance variables (`chatClient`, `converter`). To honour this, the `CategorizationPromptProvider` **replaces** `converter` as the second variable — `converter` becomes a local variable constructed inside `categorize()`, OR the provider replaces the need to hold converter as a field.
-  - **Revised decision**: Keep `chatClient` and `promptProvider` as the 2 instance variables. Construct `BeanOutputConverter` locally inside `categorize()` — this is acceptable as it is stateless and cheap.
-- The prompt must be rich: taxonomy table, vendor rules, guardrail for INTERNAL_TRANSFER.
+- **`BatchCategorizationPort`** (application): `List<Category> categorize(List<String> descriptions)` — one LLM call per batch of N descriptions.
+- **`SpringAiBatchCategorizationAdapter`** (infrastructure): instance vars = `chatClient` + `promptProvider`. Uses `BeanOutputConverter<List<CategoryResponse>>` (via `ParameterizedTypeReference`) constructed locally. Sends a numbered list of descriptions to the LLM, parses the returned JSON array.
+- **`CategorizationOrchestrator`** (application): instance vars = `domainProcessor` + `batchCategorizationPort`. `BATCH_SIZE = 5` is `static final`. Flow: (1) extract descriptions from raws, (2) batch-categorize via port, (3) zip categories back to raws, (4) call `domainProcessor.process(raw, source, category)` for each, (5) return `List<ProcessedTransaction>`.
+- **`TransactionMapper.map(RawTransaction, SourceSystem, Category)`**: accept category parameter — remove hardcoded `Category.UNKNOWN`.
+- **`DomainProcessor.process(RawTransaction, SourceSystem, Category)`**: forward category to mapper.
+- **`IngestionOrchestrator`**: swap `domainProcessor` for `categorizationOrchestrator` (still 2 instance vars: `parserService` + `categorizationOrchestrator`). Call `categorizationOrchestrator.process(rawTransactions, sourceSystem)`, then iterate and log.
 
 ### Handshakes & Handoffs
 *Used to pass execution control between agents.*
 
 #### Orchestrator (Lead Engineer) -> Execution Engineer
 - **Directive**:
-    Implement Task 2.3 — System Prompt Engineering.
+    Implement Task 2.4 — Batch Inference Logic.
 
-    **Files to Create:**
-    1. `src/main/java/com/facundo/lumina/infrastructure/agent/CategorizationPromptProvider.java`
-       - Annotate with `@Component`.
-       - Single public method: `String prompt()`.
-       - Must return a rich, multi-section system prompt containing:
-         - **Role definition**: "You are a financial transaction categorizer for a personal finance system."
-         - **Taxonomy table** — one entry per category with description and examples:
-           - `GROCERIES`: Supermarkets, food delivery, bakeries (e.g., Mercadona, Carrefour, Glovo).
-           - `UTILITIES`: Electricity, water, gas, internet, phone bills (e.g., Endesa, Vodafone, Orange).
-           - `ENTERTAINMENT`: Streaming, cinema, games, subscriptions (e.g., Netflix, Spotify, Steam).
-           - `TRANSPORT`: Public transit, taxis, ride-sharing, fuel, parking (e.g., Renfe, Uber, Cabify, BP).
-           - `INTERNAL_TRANSFER`: Transfers between own accounts to avoid double-counting (e.g., Bizum between own accounts, Transferwise/Wise, OCU inversiones, broker deposits).
-           - `UNKNOWN`: Use only when no other category clearly applies.
-         - **Vendor rules section** — explicit merchant-to-category mappings:
-           - Transferwise / Wise → INTERNAL_TRANSFER
-           - Bizum (when transferring to self) → INTERNAL_TRANSFER
-           - OCU → INTERNAL_TRANSFER
-           - Netflix → ENTERTAINMENT
-           - Spotify → ENTERTAINMENT
-           - Mercadona → GROCERIES
-         - **INTERNAL_TRANSFER guardrail**: "Any movement of money between accounts you own — regardless of the description — MUST be classified as INTERNAL_TRANSFER to avoid double-counting in budget reports."
-         - **Output format instruction**: "Return only valid JSON. No markdown, no extra text. Example: {\"category\": \"GROCERIES\"}"
+    **Step 1 — Parameterize Category in domain/application layer (no Spring annotations):**
 
-    **Files to Modify:**
-    2. `src/main/java/com/facundo/lumina/infrastructure/agent/SpringAiCategorizationAdapter.java`
-       - Remove the `static final SYSTEM_PROMPT` constant.
-       - Change constructor to accept `ChatClient` and `CategorizationPromptProvider`.
-       - Instance variables become: `chatClient`, `promptProvider` (exactly 2).
-       - Inside `categorize()`: construct `BeanOutputConverter<CategoryResponse>` as a local variable.
-       - Call `chatClient.prompt().system(promptProvider.prompt()).user(...).call().content()`.
-    3. `src/test/java/com/facundo/lumina/infrastructure/agent/SpringAiCategorizationAdapterTest.java`
-       - Update to mock `CategorizationPromptProvider` and inject it into the adapter.
-       - Existing test scenarios (GROCERIES, INTERNAL_TRANSFER, UNKNOWN, ENTERTAINMENT, TRANSPORT) must all still pass.
+    1. `src/main/java/com/facundo/lumina/domain/service/TransactionMapper.java` *(MODIFY)*
+       - Change signature: `public Transaction map(RawTransaction raw, SourceSystem source, Category category)`
+       - Replace `createDescription(raw)` to pass the `category` parameter instead of hardcoding `Category.UNKNOWN`.
+       - `createDescription` becomes: `private TransactionDescription createDescription(RawTransaction raw, Category category)`
 
-    **Files to Create (Tests):**
-    4. `src/test/java/com/facundo/lumina/infrastructure/agent/CategorizationPromptProviderTest.java`
-       - Unit test (no mocks needed — it's a pure value object).
-       - Assert that `prompt()` contains: "GROCERIES", "UTILITIES", "ENTERTAINMENT", "TRANSPORT", "INTERNAL_TRANSFER", "UNKNOWN", "Transferwise", "double-counting", "valid JSON".
+    2. `src/main/java/com/facundo/lumina/application/DomainProcessor.java` *(MODIFY)*
+       - Change signature: `public ProcessedTransaction process(RawTransaction raw, SourceSystem sourceSystem, Category category)`
+       - Forward `category` to `mapper.map(raw, sourceSystem, category)`.
+       - Import `com.facundo.lumina.domain.Category`.
+
+    **Step 2 — New port in application layer:**
+
+    3. `src/main/java/com/facundo/lumina/application/BatchCategorizationPort.java` *(CREATE)*
+       - Pure interface. No framework imports.
+       - `List<Category> categorize(List<String> descriptions)`
+
+    **Step 3 — New use case orchestrator in application layer:**
+
+    4. `src/main/java/com/facundo/lumina/application/CategorizationOrchestrator.java` *(CREATE)*
+       - `@Service` annotation.
+       - Exactly 2 instance variables: `domainProcessor` (DomainProcessor) and `batchCategorizationPort` (BatchCategorizationPort).
+       - `private static final int BATCH_SIZE = 5`
+       - Public method: `List<ProcessedTransaction> process(List<RawTransaction> raws, SourceSystem sourceSystem)`
+         - Extract descriptions: map each `RawTransaction` to its `raw.getDescription()` string → `List<String> descriptions`
+         - Categorize in batches: partition `descriptions` into sub-lists of `BATCH_SIZE`, call `batchCategorizationPort.categorize(batch)` per sub-list, flatten results back into a single `List<Category> categories` (same order as input `raws`)
+         - Zip: for each index `i`, call `domainProcessor.process(raws.get(i), sourceSystem, categories.get(i))` → collect into `List<ProcessedTransaction>`
+         - Return the list
+       - Use `IntStream` or a simple for-loop — no else keyword.
+
+    **Step 4 — New infrastructure adapter:**
+
+    5. `src/main/java/com/facundo/lumina/infrastructure/agent/SpringAiBatchCategorizationAdapter.java` *(CREATE)*
+       - Implements `BatchCategorizationPort`.
+       - `@Service` annotation.
+       - Exactly 2 instance variables: `chatClient` (ChatClient) and `promptProvider` (CategorizationPromptProvider).
+       - Private record: `record CategoryResponse(Category category) {}`
+       - `categorize(List<String> descriptions)`:
+         - Create a `BeanOutputConverter<List<CategoryResponse>>` locally using `new BeanOutputConverter<>(new ParameterizedTypeReference<List<CategoryResponse>>() {})`
+         - Build user message: a numbered list of descriptions + `converter.getFormat()`:
+           ```
+           Categorize each of the following transaction descriptions IN ORDER.
+           Return a JSON array with exactly {N} objects in the SAME ORDER as the input.
+           1. DESC1
+           2. DESC2
+           ...
+           {format instruction}
+           ```
+         - Call: `chatClient.prompt().system(promptProvider.prompt()).user(userMessage).call().content()`
+         - Parse: `converter.convert(response)` → `List<CategoryResponse>`
+         - Map: stream → `CategoryResponse::category` → `List<Category>`
+
+    **Step 5 — Update IngestionOrchestrator:**
+
+    6. `src/main/java/com/facundo/lumina/application/IngestionOrchestrator.java` *(MODIFY)*
+       - Replace instance var `domainProcessor` (DomainProcessor) with `categorizationOrchestrator` (CategorizationOrchestrator).
+       - Constructor: `(ParserService parserService, CategorizationOrchestrator categorizationOrchestrator)`
+       - `process(String sourceType, InputStream inputStream)`:
+         - `List<RawTransaction> rawTransactions = parserService.parse(sourceType, inputStream)`
+         - `SourceSystem sourceSystem = new SourceSystem(sourceType)`
+         - `List<ProcessedTransaction> results = categorizationOrchestrator.process(rawTransactions, sourceSystem)`
+         - Iterate `results` and call `logProcessedTransaction(processed)` for each.
+
+    **Step 6 — Update existing tests:**
+
+    7. `src/test/java/com/facundo/lumina/domain/service/TransactionMapperTest.java` *(MODIFY)*
+       - Update `mapper.map(raw, source)` call to `mapper.map(raw, source, Category.GROCERIES)`.
+       - Import `com.facundo.lumina.domain.Category`.
+
+    8. `src/test/java/com/facundo/lumina/application/IngestionOrchestratorTest.java` *(MODIFY)*
+       - Replace `DomainProcessor` wiring with a mock `CategorizationOrchestrator`.
+       - Mock `categorizationOrchestrator.process(anyList(), any())` to return an empty list.
+       - Update `IngestionOrchestrator` constructor call accordingly.
+       - Import Mockito (`mock`, `when`, `any`, `anyList`).
+
+    **Step 7 — New tests:**
+
+    9. `src/test/java/com/facundo/lumina/infrastructure/agent/SpringAiBatchCategorizationAdapterTest.java` *(CREATE)*
+       - Mock `ChatClient` chain and `CategorizationPromptProvider`.
+       - Test: `categorize(List.of("MERCADONA", "NETFLIX"))` with LLM returning `[{"category":"GROCERIES"},{"category":"ENTERTAINMENT"}]`
+         → assert result equals `[Category.GROCERIES, Category.ENTERTAINMENT]`.
+       - Test: `categorize(List.of("XYZ UNKNOWN"))` with LLM returning `[{"category":"UNKNOWN"}]`
+         → assert result equals `[Category.UNKNOWN]`.
+
+    10. `src/test/java/com/facundo/lumina/application/CategorizationOrchestratorTest.java` *(CREATE)*
+        - Mock `DomainProcessor` and `BatchCategorizationPort`.
+        - Test batching: provide 7 raws; mock `batchCategorizationPort.categorize(anyList())` to return appropriate categories for each batch call (first call returns 5, second returns 2).
+        - Assert `domainProcessor.process()` is called exactly 7 times with the correct category for each.
+        - Test single-batch: 3 raws → 1 batch call → 3 ProcessedTransactions returned.
 
     **Constraints:**
-    - Strict Hexagonal Architecture: `CategorizationPromptProvider` belongs to `infrastructure`. No new `domain` or `application` files.
-    - Object Calisthenics: max 2 instance variables in `SpringAiCategorizationAdapter`; no else keyword; no abbreviations; methods must be small.
-    - Do NOT add the `BeanOutputConverter` as an instance variable on the adapter.
+    - Strict Hexagonal Architecture: `BatchCategorizationPort` and `CategorizationOrchestrator` are `application`; adapter is `infrastructure`; no Spring annotations in `application` (except `@Service` on `CategorizationOrchestrator` which is acceptable as an application service).
+    - Object Calisthenics: max 2 instance vars per class; no `else`; no abbreviations; small methods.
+    - `ParameterizedTypeReference` import: `org.springframework.core.ParameterizedTypeReference`.
 
 - **Expected Artifacts**:
-    - `CategorizationPromptProvider.java`
-    - `SpringAiCategorizationAdapter.java` (modified)
-    - `SpringAiCategorizationAdapterTest.java` (modified)
-    - `CategorizationPromptProviderTest.java`
+    - `BatchCategorizationPort.java` (new)
+    - `SpringAiBatchCategorizationAdapter.java` (new)
+    - `CategorizationOrchestrator.java` (new)
+    - `TransactionMapper.java` (modified)
+    - `DomainProcessor.java` (modified)
+    - `IngestionOrchestrator.java` (modified)
+    - `TransactionMapperTest.java` (modified)
+    - `IngestionOrchestratorTest.java` (modified)
+    - `SpringAiBatchCategorizationAdapterTest.java` (new)
+    - `CategorizationOrchestratorTest.java` (new)
 
 #### Execution Engineer -> Quality Gatekeeper
 - **Artifacts Delivered**:
-    - `src/main/java/com/facundo/lumina/infrastructure/agent/CategorizationPromptProvider.java` — New `@Component`. Single `prompt()` method returning a rich multi-section system prompt: taxonomy table (6 categories with descriptions and examples), vendor-to-category rules (13 mappings), INTERNAL_TRANSFER double-counting guardrail, and JSON output format instruction. Zero instance variables.
-    - `src/main/java/com/facundo/lumina/infrastructure/agent/SpringAiCategorizationAdapter.java` — Refactored: removed `static final SYSTEM_PROMPT` constant. Constructor now accepts `ChatClient` and `CategorizationPromptProvider` (exactly 2 instance variables). `BeanOutputConverter` constructed locally inside `categorize()` — stateless and correct.
-    - `src/test/java/com/facundo/lumina/infrastructure/agent/SpringAiCategorizationAdapterTest.java` — Updated: `CategorizationPromptProvider` is now mocked and injected. All 5 original category scenarios (GROCERIES, INTERNAL_TRANSFER, UNKNOWN, ENTERTAINMENT, TRANSPORT) preserved and passing.
-    - `src/test/java/com/facundo/lumina/infrastructure/agent/CategorizationPromptProviderTest.java` — New test class. 4 tests verifying: all 6 category names present, vendor rules present (Transferwise, Mercadona, Netflix, Spotify), double-counting guardrail present, valid JSON instruction present.
+    - `src/main/java/com/facundo/lumina/application/BatchCategorizationPort.java` — New port. Pure interface, no framework imports. Single method `List<Category> categorize(List<String> descriptions)`.
+    - `src/main/java/com/facundo/lumina/infrastructure/agent/SpringAiBatchCategorizationAdapter.java` — New adapter. `@Service`. 2 instance vars (`chatClient`, `promptProvider`). `BeanOutputConverter<List<CategoryResponse>>` via `ParameterizedTypeReference` constructed locally. Builds a numbered user message, calls LLM, streams response to `List<Category>`.
+    - `src/main/java/com/facundo/lumina/application/CategorizationOrchestrator.java` — New use case. `@Service`. 2 instance vars (`domainProcessor`, `batchCategorizationPort`). `BATCH_SIZE = 5` static final. Three private single-purpose methods: `extractDescriptions`, `categorizeInBatches`, `buildProcessedTransactions`. No else. No abbreviations.
+    - `src/main/java/com/facundo/lumina/domain/service/TransactionMapper.java` — Modified. `map()` now accepts `Category category` parameter; removed hardcoded `Category.UNKNOWN`.
+    - `src/main/java/com/facundo/lumina/application/DomainProcessor.java` — Modified. `process()` now accepts `Category category` and forwards it to the mapper.
+    - `src/main/java/com/facundo/lumina/application/IngestionOrchestrator.java` — Modified. Swapped `domainProcessor` dep for `categorizationOrchestrator`; calls `categorizationOrchestrator.process(rawTransactions, sourceSystem)` and iterates results to log.
+    - `src/test/java/com/facundo/lumina/domain/service/TransactionMapperTest.java` — Updated. Passes `Category.GROCERIES` to new `map()` signature.
+    - `src/test/java/com/facundo/lumina/application/IngestionOrchestratorTest.java` — Updated. Mocks `CategorizationOrchestrator` returning empty list; removes concrete `DomainProcessor` wiring.
+    - `src/test/java/com/facundo/lumina/application/CategorizationOrchestratorTest.java` — New. 2 tests: single-batch (3 raws → 1 LLM call) and multi-batch (7 raws → 2 LLM calls with BATCH_SIZE=5). Verifies correct category assignment per transaction.
+    - `src/test/java/com/facundo/lumina/infrastructure/agent/SpringAiBatchCategorizationAdapterTest.java` — New. 2 tests: multi-description batch returning correct ordered categories; single unknown description.
 - **Testing Instructions**: Run `./gradlew test` from project root.
-- **Proof of Work**: `BUILD SUCCESSFUL in 10s` — all tasks executed: compileJava, compileTestJava, test (5 actionable tasks, no failures).
+- **Proof of Work**: `BUILD SUCCESSFUL in 3s` — all tasks executed: compileJava, compileTestJava, test (5 actionable tasks, no failures).
 
 #### Quality Gatekeeper -> Orchestrator
 - **Approval Status**: ✅ Approved
@@ -99,24 +162,25 @@ This file serves as the central "Blackboard" for the multi-agent system. Agents 
 ##### Traceability Report
 | Directive Item | Artifact | Verdict |
 |---|---|---|
-| `CategorizationPromptProvider` `@Component` with `prompt()` | `CategorizationPromptProvider.java` | ✅ `@Component`, single `prompt()` method, zero instance variables |
-| Taxonomy table — 6 categories with descriptions and examples | `CategorizationPromptProvider.java` | ✅ Markdown table with all 6 categories, descriptions, and real-world examples |
-| Vendor-to-category rules (≥13 mappings) | `CategorizationPromptProvider.java` | ✅ 13 explicit merchant rules in dedicated "Vendor Rules" section |
-| INTERNAL_TRANSFER double-counting guardrail | `CategorizationPromptProvider.java` | ✅ Explicit guardrail paragraph with "doubt → INTERNAL_TRANSFER" instruction |
-| Output format instruction ("valid JSON") | `CategorizationPromptProvider.java` | ✅ "Return only valid JSON. No markdown, no extra text." with example |
-| Adapter refactored: inject `promptProvider`, exactly 2 instance vars | `SpringAiCategorizationAdapter.java` | ✅ `chatClient` + `promptProvider`; `BeanOutputConverter` is a local variable in `categorize()` |
-| Remove `static final SYSTEM_PROMPT` constant from adapter | `SpringAiCategorizationAdapter.java` | ✅ Constant removed; prompt delegated to provider |
-| `SpringAiCategorizationAdapterTest` updated with mock provider | `SpringAiCategorizationAdapterTest.java` | ✅ `CategorizationPromptProvider` mocked and injected; all 5 scenarios pass |
-| `CategorizationPromptProviderTest` — 4 content assertions | `CategorizationPromptProviderTest.java` | ✅ All 6 categories, vendor rules, guardrail, and JSON format verified |
+| `BatchCategorizationPort` in `application`, pure interface | `BatchCategorizationPort.java` | ✅ No framework imports; single `List<Category> categorize(List<String>)` |
+| `SpringAiBatchCategorizationAdapter` — `@Service`, 2 instance vars, local converter | `SpringAiBatchCategorizationAdapter.java` | ✅ `chatClient` + `promptProvider`; `BeanOutputConverter` local via `ParameterizedTypeReference` |
+| `CategorizationOrchestrator` — 2 instance vars, `BATCH_SIZE=5`, batching logic | `CategorizationOrchestrator.java` | ✅ `domainProcessor` + `batchCategorizationPort`; 3 private single-purpose methods; no else |
+| `TransactionMapper.map()` accepts `Category` | `TransactionMapper.java` | ✅ Signature updated; `Category.UNKNOWN` hardcode removed |
+| `DomainProcessor.process()` accepts `Category` | `DomainProcessor.java` | ✅ Forwarded to mapper |
+| `IngestionOrchestrator` uses `categorizationOrchestrator` | `IngestionOrchestrator.java` | ✅ 2 instance vars: `parserService` + `categorizationOrchestrator` |
+| `TransactionMapperTest` updated | `TransactionMapperTest.java` | ✅ Passes `Category.GROCERIES` to new signature |
+| `IngestionOrchestratorTest` updated with mock | `IngestionOrchestratorTest.java` | ✅ `CategorizationOrchestrator` mocked; returns empty list |
+| `CategorizationOrchestratorTest` — 2 tests | `CategorizationOrchestratorTest.java` | ✅ Verifies 1 LLM call for 3 raws; 2 LLM calls for 7 raws (BATCH_SIZE=5) |
+| `SpringAiBatchCategorizationAdapterTest` — 2 tests | `SpringAiBatchCategorizationAdapterTest.java` | ✅ Multi-item ordered result; single UNKNOWN description |
 
 ##### Global DoD Checklist
 - [x] Code compiles without errors — `BUILD SUCCESSFUL`
 - [x] All tests pass — 0 failures
-- [x] **Hexagonal Architecture** — both new/modified files are in `infrastructure`; `domain` and `application` untouched
-- [x] **SOLID** — SRP: provider owns only the prompt string; adapter only orchestrates the LLM call; DIP via `CategorizationPort`
-- [x] **Object Calisthenics** — `SpringAiCategorizationAdapter`: exactly 2 instance variables; `CategorizationPromptProvider`: 0 instance variables; no `else` keywords; no abbreviations; all methods are small and single-purpose
-- [x] **Clean Code** — intent-revealing names; prompt sections use markdown headers for clarity; no unnecessary comments
-- [x] **No scope creep** — exactly the 4 files from the directive were created/modified; no unrelated changes
+- [x] **Hexagonal Architecture** — `BatchCategorizationPort` and `CategorizationOrchestrator` in `application`; adapter in `infrastructure`; zero framework imports in `domain`
+- [x] **SOLID** — SRP across all 3 new classes; DIP via ports; ISP (minimal interfaces)
+- [x] **Object Calisthenics** — all classes ≤2 instance vars; no `else`; no abbreviations; all methods small and single-purpose; `BATCH_SIZE` is `static final`
+- [x] **Clean Code** — intent-revealing names; private method decomposition; no unnecessary comments
+- [x] **No scope creep** — exactly the 10 specified artifacts created/modified; no unrelated changes
 - [x] No regression — all pre-existing tests still pass
 
 ## Blockers / Issues

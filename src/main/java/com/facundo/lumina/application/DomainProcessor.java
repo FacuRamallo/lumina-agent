@@ -1,5 +1,6 @@
 package com.facundo.lumina.application;
 
+import com.facundo.lumina.domain.Category;
 import com.facundo.lumina.domain.SourceSystem;
 import com.facundo.lumina.domain.service.HashingService;
 import com.facundo.lumina.domain.service.TransactionMapper;
@@ -17,8 +18,8 @@ public class DomainProcessor {
         this.hasher = hasher;
     }
 
-    public ProcessedTransaction process(RawTransaction raw, SourceSystem sourceSystem) {
-        var transaction = mapper.map(raw, sourceSystem);
+    public ProcessedTransaction process(RawTransaction raw, SourceSystem sourceSystem, Category category) {
+        var transaction = mapper.map(raw, sourceSystem, category);
         var id = hasher.generateId(transaction);
         return new ProcessedTransaction(transaction, id);
     }

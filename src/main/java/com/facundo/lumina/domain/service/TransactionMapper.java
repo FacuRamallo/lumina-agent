@@ -16,10 +16,10 @@ public final class TransactionMapper {
 
     private static final String DEFAULT_CURRENCY = "EUR";
 
-    public Transaction map(RawTransaction raw, SourceSystem source) {
+    public Transaction map(RawTransaction raw, SourceSystem source, Category category) {
         return new Transaction(
             createOrigin(raw, source),
-            createDetails(raw)
+            createDetails(raw, category)
         );
     }
 
@@ -30,17 +30,17 @@ public final class TransactionMapper {
         );
     }
 
-    private TransactionDetails createDetails(RawTransaction raw) {
+    private TransactionDetails createDetails(RawTransaction raw, Category category) {
         return new TransactionDetails(
-            createDescription(raw),
+            createDescription(raw, category),
             createMoney(raw)
         );
     }
 
-    private TransactionDescription createDescription(RawTransaction raw) {
+    private TransactionDescription createDescription(RawTransaction raw, Category category) {
         return new TransactionDescription(
             new RawDescription(raw.getDescription()),
-            Category.UNKNOWN
+            category
         );
     }
 

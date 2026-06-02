@@ -15,14 +15,16 @@ class SpringAiCategorizationAdapterTest {
         ChatClient chatClient = mock(ChatClient.class);
         ChatClient.ChatClientRequestSpec requestSpec = mock(ChatClient.ChatClientRequestSpec.class);
         ChatClient.CallResponseSpec responseSpec = mock(ChatClient.CallResponseSpec.class);
+        CategorizationPromptProvider promptProvider = mock(CategorizationPromptProvider.class);
 
         when(chatClient.prompt()).thenReturn(requestSpec);
         when(requestSpec.system(anyString())).thenReturn(requestSpec);
         when(requestSpec.user(anyString())).thenReturn(requestSpec);
         when(requestSpec.call()).thenReturn(responseSpec);
         when(responseSpec.content()).thenReturn(llmResponse);
+        when(promptProvider.prompt()).thenReturn("GROCERIES UTILITIES ENTERTAINMENT TRANSPORT INTERNAL_TRANSFER UNKNOWN valid JSON");
 
-        return new SpringAiCategorizationAdapter(chatClient);
+        return new SpringAiCategorizationAdapter(chatClient, promptProvider);
     }
 
     @Test

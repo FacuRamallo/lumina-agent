@@ -9,28 +9,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class SpringAiCategorizationAdapter implements CategorizationPort {
 
-    private static final String SYSTEM_PROMPT = """
-            You are a financial transaction categorizer.
-            Analyze the raw transaction description provided by the user and return exactly one category.
-            Valid categories: GROCERIES, UTILITIES, ENTERTAINMENT, TRANSPORT, INTERNAL_TRANSFER, UNKNOWN.
-            Rules:
-            - Use INTERNAL_TRANSFER for any transfer between own accounts to avoid double-counting.
-            - Use UNKNOWN only when no other category fits.
-            - Return only valid JSON. No extra text, no markdown.
-            """;
-
     private final ChatClient chatClient;
-    private final BeanOutputConverter<CategoryResponse> converter;
+    private final CategorizationPromptProvider promptProvider;
 
-    public SpringAiCategorizationAdapter(ChatClient chatClient) {
+    public SpringAiCategorizationAdapter(ChatClient chatClient, CategorizationPromptProvider promptProvider) {
         this.chatClient = chatClient;
-        this.converter = new BeanOutputConverter<>(CategoryResponse.class);
+        this.promptProvider = promptProvider;
     }
 
     @Override
     public Category categorize(String rawDescription) {
+        BeanOutputConverter<CategoryResponse> converter = new BeanOutputConverter<>(CategoryResponse.class);
         String response = chatClient.prompt()
-                .system(SYSTEM_PROMPT)
+                .system(promptProvider.prompt())
                 .user(rawDescription + "\n" + converter.getFormat())
                 .call()
                 .content();

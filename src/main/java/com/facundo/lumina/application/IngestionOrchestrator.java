@@ -16,21 +16,18 @@ public class IngestionOrchestrator {
     private static final Logger log = LoggerFactory.getLogger(IngestionOrchestrator.class);
 
     private final ParserService parserService;
-    private final DomainProcessor domainProcessor;
+    private final CategorizationOrchestrator categorizationOrchestrator;
 
-    public IngestionOrchestrator(ParserService parserService, DomainProcessor domainProcessor) {
+    public IngestionOrchestrator(ParserService parserService, CategorizationOrchestrator categorizationOrchestrator) {
         this.parserService = parserService;
-        this.domainProcessor = domainProcessor;
+        this.categorizationOrchestrator = categorizationOrchestrator;
     }
 
     public void process(String sourceType, InputStream inputStream) {
         List<RawTransaction> rawTransactions = parserService.parse(sourceType, inputStream);
         SourceSystem sourceSystem = new SourceSystem(sourceType);
-
-        for (RawTransaction raw : rawTransactions) {
-            ProcessedTransaction processed = domainProcessor.process(raw, sourceSystem);
-            logProcessedTransaction(processed);
-        }
+        List<ProcessedTransaction> results = categorizationOrchestrator.process(rawTransactions, sourceSystem);
+        results.forEach(this::logProcessedTransaction);
     }
 
     private void logProcessedTransaction(ProcessedTransaction processed) {

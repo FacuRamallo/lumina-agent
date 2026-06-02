@@ -1,5 +1,6 @@
 package com.facundo.lumina.domain.service;
 
+import com.facundo.lumina.domain.Category;
 import com.facundo.lumina.domain.Transaction;
 import com.facundo.lumina.domain.SourceSystem;
 import com.facundo.lumina.infrastructure.ingestion.RawTransaction;
@@ -24,7 +25,7 @@ class TransactionMapperTest {
         TransactionMapper mapper = new TransactionMapper();
 
         // Act
-        Transaction transaction = mapper.map(raw, source);
+        Transaction transaction = mapper.map(raw, source, Category.GROCERIES);
 
         // Assert
         assertNotNull(transaction);

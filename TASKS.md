@@ -15,6 +15,21 @@ This ledger tracks the execution of all tasks in the project using EARS (Easy Ap
 
 ## Active Tasks
 
+### Task 2.3 - System Prompt Engineering
+- **Status**: In Progress 🔄
+- **Assigned Agent**: Execution Engineer
+- **Milestone**: M2
+- **EARS**: **While** categorizing a transaction, **When** the LLM is invoked, **the system shall** use a structured, externalized system prompt that encodes a categorization taxonomy, vendor-specific rules, and an explicit INTERNAL_TRANSFER guardrail to prevent double-counting.
+- **Task-Specific DoD**:
+  - [ ] Extract the inline `SYSTEM_PROMPT` constant from `SpringAiCategorizationAdapter` into a dedicated, externalized `CategorizationPromptProvider` in the `infrastructure` layer.
+  - [ ] The prompt provider must expose a single method (e.g., `String prompt()`) and be injected into the adapter via constructor — keeping the adapter at max 2 instance variables.
+  - [ ] The system prompt must include: full category taxonomy with descriptions, explicit vendor/merchant rules (e.g., "Transferwise → INTERNAL_TRANSFER"), and the INTERNAL_TRANSFER double-counting guardrail.
+  - [ ] Unit test `CategorizationPromptProviderTest` verifies the prompt contains all required taxonomy keywords and rules.
+  - [ ] `SpringAiCategorizationAdapterTest` is updated to inject the prompt provider mock.
+  - [ ] Hexagonal Architecture: no framework annotations in `domain` or `application`; prompt provider is `infrastructure`.
+  - [ ] Object Calisthenics: max 2 instance variables per class; no else; no abbreviations; small methods.
+  - [ ] All pre-existing tests still pass — `./gradlew test` produces `BUILD SUCCESSFUL`.
+
 ---
 
 ## Completed Tasks

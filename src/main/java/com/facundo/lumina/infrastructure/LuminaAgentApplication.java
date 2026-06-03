@@ -23,7 +23,7 @@ public class LuminaAgentApplication {
 
             // Bucle interactivo simple para probar varias preguntas
             try (Scanner scanner = new Scanner(System.in)) {
-                while (true) {
+                while (scanner.hasNextLine()) {
                     System.out.print("TÚ > ");
                     String input = scanner.nextLine();
 

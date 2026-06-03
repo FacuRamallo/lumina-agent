@@ -15,40 +15,55 @@ This ledger tracks the execution of all tasks in the project using EARS (Easy Ap
 
 ## Active Tasks
 
-### Task 2.4 - Batch Inference Logic
+### Task 3.1 - PGVector Infrastructure
 - **Status**: In Progress 🔄
 - **Assigned Agent**: Execution Engineer
-- **Milestone**: M2
-- **EARS**: **While** the ingestion pipeline runs, **When** transactions have been parsed, **the system shall** group their raw descriptions into batches of 5 and call the LLM once per batch via a `BatchCategorizationPort`, returning fully categorized `ProcessedTransaction` objects.
+- **Milestone**: M3
+- **EARS**: **While** the application is starting, **When** the database components are initialized, **the system shall** establish a connection to a local Dockerized PostgreSQL instance with the `pgvector` extension enabled and automatically apply Flyway migrations to initialize the schema.
 - **Task-Specific DoD**:
-  - [ ] `BatchCategorizationPort` defined in `application` — `List<Category> categorize(List<String> descriptions)`.
-  - [ ] `SpringAiBatchCategorizationAdapter` in `infrastructure` implements the port with `chatClient` + `promptProvider` (exactly 2 instance vars); `BeanOutputConverter<List<CategoryResponse>>` is constructed locally.
-  - [ ] `CategorizationOrchestrator` in `application` has `domainProcessor` + `batchCategorizationPort` (exactly 2 instance vars); `BATCH_SIZE = 5` is a `static final` constant; it maps raws → domain, batches descriptions, calls LLM per batch, returns categorized list.
-  - [ ] `TransactionMapper.map()` and `DomainProcessor.process()` accept a `Category` parameter (no more hardcoded `Category.UNKNOWN`).
-  - [ ] `IngestionOrchestrator` swaps `domainProcessor` dep for `categorizationOrchestrator`; iterates result list and logs each.
-  - [ ] All impacted existing tests updated (`TransactionMapperTest`, `IngestionOrchestratorTest`).
-  - [ ] New unit tests: `SpringAiBatchCategorizationAdapterTest` and `CategorizationOrchestratorTest`.
-  - [ ] `./gradlew test` → `BUILD SUCCESSFUL`.
-  - [ ] Hexagonal Architecture, SOLID, Object Calisthenics, Clean Code — all enforced.
-
-### Task 2.3 - System Prompt Engineering
-- **Status**: In Progress 🔄
-- **Assigned Agent**: Execution Engineer
-- **Milestone**: M2
-- **EARS**: **While** categorizing a transaction, **When** the LLM is invoked, **the system shall** use a structured, externalized system prompt that encodes a categorization taxonomy, vendor-specific rules, and an explicit INTERNAL_TRANSFER guardrail to prevent double-counting.
-- **Task-Specific DoD**:
-  - [ ] Extract the inline `SYSTEM_PROMPT` constant from `SpringAiCategorizationAdapter` into a dedicated, externalized `CategorizationPromptProvider` in the `infrastructure` layer.
-  - [ ] The prompt provider must expose a single method (e.g., `String prompt()`) and be injected into the adapter via constructor — keeping the adapter at max 2 instance variables.
-  - [ ] The system prompt must include: full category taxonomy with descriptions, explicit vendor/merchant rules (e.g., "Transferwise → INTERNAL_TRANSFER"), and the INTERNAL_TRANSFER double-counting guardrail.
-  - [ ] Unit test `CategorizationPromptProviderTest` verifies the prompt contains all required taxonomy keywords and rules.
-  - [ ] `SpringAiCategorizationAdapterTest` is updated to inject the prompt provider mock.
-  - [ ] Hexagonal Architecture: no framework annotations in `domain` or `application`; prompt provider is `infrastructure`.
-  - [ ] Object Calisthenics: max 2 instance variables per class; no else; no abbreviations; small methods.
-  - [ ] All pre-existing tests still pass — `./gradlew test` produces `BUILD SUCCESSFUL`.
+  - [ ] Add PostgreSQL container with `pgvector/pgvector:pg16` extension to `docker-compose.yml`.
+  - [ ] Add PostgreSQL driver (`org.postgresql:postgresql`), JPA (`spring-boot-starter-data-jpa`), and Flyway (`flyway-core`, `flyway-database-postgresql`) dependencies to `build.gradle.kts`.
+  - [ ] Configure `spring.datasource` and `spring.ai.vectorstore.pgvector` properties in `application.yml` with `initialize-schema: false`.
+  - [ ] Create Flyway migration script `V1__init_pgvector.sql` to initialize extensions (`vector`, `hstore`, `uuid-ossp`) and `vector_store` table with HNSW index.
+  - [ ] All unit tests compile and pass successfully (`./gradlew test` -> `BUILD SUCCESSFUL`).
+  - [ ] Verify database connectivity and schema creation manually by running the Docker container and launching the application.
 
 ---
 
 ## Completed Tasks
+
+### Task 2.4 - Batch Inference Logic
+- **Status**: Done ✅
+- **Assigned Agent**: Execution Engineer
+- **Milestone**: M2
+- **EARS**: **While** the ingestion pipeline runs, **When** transactions have been parsed, **the system shall** group their raw descriptions into batches of 5 and call the LLM once per batch via a `BatchCategorizationPort`, returning fully categorized `ProcessedTransaction` objects.
+- **Task-Specific DoD**:
+  - [x] `BatchCategorizationPort` defined in `application` — `List<Category> categorize(List<String> descriptions)`.
+  - [x] `SpringAiBatchCategorizationAdapter` in `infrastructure` implements the port with `chatClient` + `promptProvider` (exactly 2 instance vars); `BeanOutputConverter<List<CategoryResponse>>` is constructed locally.
+  - [x] `CategorizationOrchestrator` in `application` has `domainProcessor` + `batchCategorizationPort` (exactly 2 instance vars); `BATCH_SIZE = 5` is a `static final` constant; it maps raws → domain, batches descriptions, calls LLM per batch, returns categorized list.
+  - [x] `TransactionMapper.map()` and `DomainProcessor.process()` accept a `Category` parameter (no more hardcoded `Category.UNKNOWN`).
+  - [x] `IngestionOrchestrator` swaps `domainProcessor` dep for `categorizationOrchestrator`; iterates result list and logs each.
+  - [x] All impacted existing tests updated (`TransactionMapperTest`, `IngestionOrchestratorTest`).
+  - [x] New unit tests: `SpringAiBatchCategorizationAdapterTest` and `CategorizationOrchestratorTest`.
+  - [x] `./gradlew test` → `BUILD SUCCESSFUL`.
+  - [x] Hexagonal Architecture, SOLID, Object Calisthenics, Clean Code — all enforced.
+
+---
+
+### Task 2.3 - System Prompt Engineering
+- **Status**: Done ✅
+- **Assigned Agent**: Execution Engineer
+- **Milestone**: M2
+- **EARS**: **While** categorizing a transaction, **When** the LLM is invoked, **the system shall** use a structured, externalized system prompt that encodes a categorization taxonomy, vendor-specific rules, and an explicit INTERNAL_TRANSFER guardrail to prevent double-counting.
+- **Task-Specific DoD**:
+  - [x] Extract the inline `SYSTEM_PROMPT` constant from `SpringAiCategorizationAdapter` into a dedicated, externalized `CategorizationPromptProvider` in the `infrastructure` layer.
+  - [x] The prompt provider must expose a single method (e.g., `String prompt()`) and be injected into the adapter via constructor — keeping the adapter at max 2 instance variables.
+  - [x] The system prompt must include: full category taxonomy with descriptions, explicit vendor/merchant rules (e.g., "Transferwise → INTERNAL_TRANSFER"), and the INTERNAL_TRANSFER double-counting guardrail.
+  - [x] Unit test `CategorizationPromptProviderTest` verifies the prompt contains all required taxonomy keywords and rules.
+  - [x] `SpringAiCategorizationAdapterTest` is updated to inject the prompt provider mock.
+  - [x] Hexagonal Architecture: no framework annotations in `domain` or `application`; prompt provider is `infrastructure`.
+  - [x] Object Calisthenics: max 2 instance variables per class; no else; no abbreviations; small methods.
+  - [x] All pre-existing tests still pass — `./gradlew test` produces `BUILD SUCCESSFUL`.
 
 ### Task 2.2 - Structured Output Service
 - **Status**: Done ✅

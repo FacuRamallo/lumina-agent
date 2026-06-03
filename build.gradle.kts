@@ -47,6 +47,11 @@ dependencies {
 
     // --- Persistence & Data ---
     implementation("org.apache.commons:commons-csv:1.10.0")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.postgresql:postgresql")
+    implementation("org.springframework.ai:spring-ai-pgvector-store-spring-boot-starter")
+    implementation("org.flywaydb:flyway-core")
+    runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
     // --- Testing ---
     testImplementation("org.springframework.boot:spring-boot-starter-test")

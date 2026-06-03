@@ -1,6 +1,17 @@
 spring:
   application:
     name: lumina-agent
+  datasource:
+    url: jdbc:postgresql://localhost:5432/lumina
+    username: lumina
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
   ai:
     ollama:
       base-url: http://localhost:11434
@@ -18,6 +29,12 @@ spring:
       embedding:
         options:
           model: nomic-embed-text
+    vectorstore:
+      pgvector:
+        initialize-schema: false
+        dimensions: 768
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
 
 
 

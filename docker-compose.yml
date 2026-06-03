@@ -5,3 +5,14 @@ services:
     ports:
       - "9411:9411"
     restart: unless-stopped
+
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: lumina_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: lumina
+      POSTGRES_USER: lumina
+      POSTGRES_PASSWORD: password
+    restart: unless-stopped
